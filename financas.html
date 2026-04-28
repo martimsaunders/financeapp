@@ -54,7 +54,7 @@
 html{height:100%;background:var(--bg);overflow:hidden}
 body{min-height:100%;height:100%;margin:0;padding:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);font-family:var(--font);overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 @supports (-webkit-touch-callout:none){html,body{height:-webkit-fill-available}}
-body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-area-inset-top),22px);background:var(--bg);z-index:9999;pointer-events:none}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-area-inset-top),22px);background:var(--bg);z-index:10;pointer-events:none}
 .app{display:flex;flex-direction:column;height:var(--app-height,100dvh);max-width:430px;margin:0 auto;position:fixed;inset:0;left:50%;transform:translateX(-50%);width:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));overflow:hidden}
 @supports (-webkit-touch-callout:none){.app{height:var(--app-height,-webkit-fill-available)}}
 
@@ -371,6 +371,7 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 .modal-overlay{padding:0 0 env(safe-area-inset-bottom);overscroll-behavior:contain}
 .modal{max-height:min(88svh,720px);padding-bottom:max(42px, calc(24px + env(safe-area-inset-bottom)));scroll-padding:88px 0 40px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .modal input,.modal select,.modal textarea{scroll-margin-top:90px;scroll-margin-bottom:150px}
+.input-active .modal{border-radius:30px;margin:0 8px max(8px, env(safe-area-inset-bottom));width:calc(100% - 16px);padding-bottom:28px}
 .input-active .tabs{opacity:1;pointer-events:auto}.input-active .fab{opacity:0;pointer-events:none;transition:opacity .12s ease}
 .inv-status{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.35}
 .inv-status.good{color:var(--green)}
@@ -392,7 +393,6 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
         <div class="salary-badge" onclick="showPage('resumo')" aria-label="Estimated balance">
           <div class="sal-label">Balance</div>
           <div class="sal-value" id="salary-badge-val">— €</div>
-          <div class="sal-mini" id="salary-badge-sub">this month</div>
         </div>
       </div>
     </div>
@@ -1220,11 +1220,9 @@ function updateSalaryBadge(){
   if(incomeEl)incomeEl.textContent=sal?fmt(sal):'— €';
 
   const badge=document.getElementById('salary-badge-val');
-  const sub=document.getElementById('salary-badge-sub');
   if(!badge)return;
   if(!sal){
     badge.textContent='— €';
-    if(sub)sub.textContent='set income in Settings';
     badge.style.color='var(--muted)';
     return;
   }
@@ -1234,7 +1232,6 @@ function updateSalaryBadge(){
   const balance=cents(sal-expenses-invested);
   badge.textContent=fmt(balance);
   badge.style.color=balance>=0?'var(--green)':'var(--red)';
-  if(sub)sub.textContent='left this month';
 }
 
 /* ── OPEN INCOME MODAL ── */
