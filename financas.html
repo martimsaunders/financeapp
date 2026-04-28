@@ -63,10 +63,11 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 .topbar-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .topbar h1{font-size:30px;font-weight:900;letter-spacing:-1.2px;line-height:1}
 .topbar .date{font-size:13px;color:var(--muted);margin-top:8px;font-weight:600}
-.salary-badge{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.7);border-radius:18px;padding:10px 14px;cursor:pointer;text-align:right;transition:transform .2s var(--spring),background .2s;flex-shrink:0;min-width:88px}
+.salary-badge{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.7);border-radius:18px;padding:10px 14px;cursor:pointer;text-align:right;transition:transform .2s var(--spring),background .2s;flex-shrink:0;min-width:118px}
 .salary-badge:active{transform:scale(.97)}
 .sal-label{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.8px}
-.sal-value{font-size:16px;font-weight:900;color:var(--green);letter-spacing:-.5px;margin-top:2px}
+.sal-value{font-size:16px;font-weight:900;color:var(--green);letter-spacing:-.5px;margin-top:2px;white-space:nowrap}
+.sal-mini{font-size:10px;color:var(--muted);font-weight:800;margin-top:2px;white-space:nowrap}
 
 /* TABS */
 .tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:calc(100% - 28px);max-width:402px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:9px;background:rgba(255,255,255,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.85);border-radius:28px;box-shadow:0 12px 32px rgba(41,45,80,.13);z-index:20;will-change:transform}
@@ -323,6 +324,7 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 [data-theme="dark"] .salary-badge{box-shadow:0 14px 32px rgba(0,0,0,.28) !important}
 [data-theme="dark"] .sal-label{color:#c9c5ef !important}
 [data-theme="dark"] .sal-value{color:#86efac !important;text-shadow:0 0 14px rgba(74,222,128,.18)}
+[data-theme="dark"] .sal-mini{color:#aaa6d3 !important}
 [data-theme="dark"] .kpi:nth-child(1),
 [data-theme="dark"] .kpi:nth-child(2),
 [data-theme="dark"] .kpi:nth-child(3),
@@ -360,13 +362,11 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 [data-theme="dark"] .exp-icon,
 [data-theme="dark"] .inv-ticker{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 
-/* v24 iPhone keyboard + modal stability polish */
-.modal{max-height:min(93dvh, calc(var(--normal-height, 100vh) - 12px));padding-bottom:max(52px, calc(28px + env(safe-area-inset-bottom)));scroll-padding:96px 0 32px;overscroll-behavior:contain}
-.keyboard-open .modal-overlay.open{top:var(--vv-top,0px);bottom:auto;height:var(--keyboard-height,100vh);align-items:flex-start;padding:8px 12px 0}
-.keyboard-open .modal{width:100%;border-radius:24px;max-height:calc(var(--keyboard-height, 100vh) - 16px);padding:8px 20px 28px;transform:none!important;transition:none!important}
-.keyboard-open .modal-handle{margin-top:8px;margin-bottom:14px}
-.keyboard-open .tabs,.keyboard-open .fab{opacity:0;pointer-events:none}
-html.input-active,body.input-active{overflow:hidden!important}
+/* v25 iPhone modal stability polish: no viewport jumps */
+.modal-overlay{padding:0 0 env(safe-area-inset-bottom);overscroll-behavior:contain}
+.modal{max-height:min(88svh,720px);padding-bottom:max(42px, calc(24px + env(safe-area-inset-bottom)));scroll-padding:88px 0 40px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.modal input,.modal select,.modal textarea{scroll-margin-top:90px;scroll-margin-bottom:150px}
+.input-active .tabs,.input-active .fab{opacity:0;pointer-events:none;transition:opacity .12s ease}
 .inv-status{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.35}
 .inv-status.good{color:var(--green)}
 .inv-status.bad{color:var(--red)}
@@ -384,8 +384,8 @@ html.input-active,body.input-active{overflow:hidden!important}
       <div class="top-actions">
         <button class="theme-toggle" id="calendar-toggle" onclick="openCalendar()" aria-label="Calendar"><span class="ios-icon" data-icon="calendar"></span></button>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme"><span class="ios-icon" data-icon="sun"></span></button>
-        <div class="salary-badge" onclick="openModal('modal-salary')">
-          <div class="sal-label">Income</div>
+        <div class="salary-badge" onclick="showPage('resumo')" aria-label="Estimated balance">
+          <div class="sal-label">Balance</div>
           <div class="sal-value" id="salary-badge-val">— €</div>
         </div>
       </div>
@@ -499,7 +499,17 @@ html.input-active,body.input-active{overflow:hidden!important}
       <div class="card">
         <div class="card-title">Settings</div>
         <div style="font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:6px">App settings</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6">Monthly plan, backups and preferences live here.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">Income, monthly plan, backups and preferences live here.</div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title" style="margin-bottom:6px">Monthly income</div>
+            <div style="font-size:30px;font-weight:900;letter-spacing:-1px" id="settings-income-val">— €</div>
+          </div>
+          <button class="small-pill" onclick="openIncomeModal()">Edit</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:10px">Used to calculate your balance and monthly plan.</div>
       </div>
       <div class="card">
         <div class="card-title">Monthly plan</div>
@@ -744,7 +754,7 @@ html.input-active,body.input-active{overflow:hidden!important}
       <input type="text" inputmode="decimal" id="salary-input" placeholder="0,00" autocomplete="off" style="font-size:34px!important;font-weight:900!important;letter-spacing:-2px!important;text-align:center!important;padding:18px 48px 18px 16px!important">
       <span class="cur">€</span>
     </div></div>
-    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.7">Serve de base para o teu saldo e plano mensal.</div>
+    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.7">Used to calculate your balance and monthly plan.</div>
     <button class="btn-primary" onclick="saveSalary()">Save</button>
   </div>
 </div>
@@ -916,39 +926,23 @@ function toggleTheme(){
 hydrateStaticIcons();
 applyTheme(localStorage.getItem('fin_theme')||'light');
 
-/* iOS/PWA viewport refresh fix */
-let lastNormalHeight=window.innerHeight;
+/* iOS/PWA viewport polish */
 function fixIOSViewport(){
   const app=document.querySelector('.app');
-  if(!app)return;
-  const vv=window.visualViewport;
-  const h=(vv&&vv.height)?vv.height:window.innerHeight;
-  const offsetTop=(vv&&typeof vv.offsetTop==='number')?vv.offsetTop:0;
-  const keyboardOpen=vv && h < window.innerHeight*0.78;
-  document.body.classList.toggle('keyboard-open',!!keyboardOpen);
-  document.body.classList.toggle('input-active',!!keyboardOpen);
-  document.documentElement.classList.toggle('input-active',!!keyboardOpen);
-  document.documentElement.style.setProperty('--keyboard-height',h+'px');
-  document.documentElement.style.setProperty('--vv-top',offsetTop+'px');
-  if(!keyboardOpen){
-    lastNormalHeight=h;
-    app.style.height=h+'px';
+  const h=window.innerHeight;
+  if(app){
+    app.style.minHeight=h+'px';
     document.documentElement.style.setProperty('--app-height',h+'px');
-    document.documentElement.style.setProperty('--normal-height',h+'px');
-  }else{
-    app.style.height=lastNormalHeight+'px';
-    document.documentElement.style.setProperty('--app-height',lastNormalHeight+'px');
   }
 }
-window.addEventListener('resize',fixIOSViewport,{passive:true});
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',fixIOSViewport,{passive:true});
-  window.visualViewport.addEventListener('scroll',fixIOSViewport,{passive:true});
+function setInputActive(active){
+  document.body.classList.toggle('input-active',!!active);
+  document.documentElement.classList.toggle('input-active',!!active);
 }
+window.addEventListener('resize',fixIOSViewport,{passive:true});
 window.addEventListener('orientationchange',()=>setTimeout(fixIOSViewport,250),{passive:true});
 window.addEventListener('pageshow',()=>setTimeout(fixIOSViewport,50),{passive:true});
 fixIOSViewport();
-
 
 
 /* ── PAGES ── */
@@ -967,7 +961,7 @@ function showPage(p){
     fabEl.setAttribute('aria-label',p==='investimentos'?'Add investimento':p==='objetivos'?'Add objetivo':'Add despesa');
   }
   if(p==='resumo')renderSummary();
-  if(p==='definicoes')renderPlano();
+  if(p==='definicoes'){renderPlano();updateSalaryBadge();}
   if(p==='objetivos')renderGoals();
 }
 
@@ -980,27 +974,28 @@ document.getElementById('fab-btn').onclick=()=>{
 
 /* ── MODAL ── */
 function openModal(id){
-  const modal=document.getElementById(id);
-  modal.classList.add('open');
-  setTimeout(fixIOSViewport,60);
+  document.querySelectorAll('.modal-overlay.open').forEach(m=>{
+    if(m.id!==id)m.classList.remove('open');
+  });
+  const overlay=document.getElementById(id);
+  if(!overlay)return;
+  const sheet=overlay.querySelector('.modal');
+  if(sheet)sheet.scrollTop=0;
+  overlay.classList.add('open');
 }
-
-function closeModal(id){document.getElementById(id).classList.remove('open')}
+function closeModal(id){
+  const overlay=document.getElementById(id);
+  if(overlay)overlay.classList.remove('open');
+  setInputActive(false);
+}
 function overlayClick(e,id){if(e.target===document.getElementById(id))closeModal(id)}
-function keepFieldVisible(el){
-  const modal=el.closest('.modal');
-  if(!modal)return;
-  setTimeout(()=>{
-    const modalRect=modal.getBoundingClientRect();
-    const elRect=el.getBoundingClientRect();
-    const topGap=elRect.top-modalRect.top;
-    const bottomGap=modalRect.bottom-elRect.bottom;
-    if(topGap<82){modal.scrollTop+=topGap-82;}
-    else if(bottomGap<120){modal.scrollTop+=120-bottomGap;}
-  },180);
-}
-document.addEventListener('focusin',e=>{if(e.target.matches('input,select,textarea')){fixIOSViewport();keepFieldVisible(e.target);}});
-document.addEventListener('focusout',()=>setTimeout(fixIOSViewport,180));
+document.addEventListener('focusin',e=>{
+  if(e.target.matches('input,select,textarea'))setInputActive(true);
+});
+document.addEventListener('focusout',()=>setTimeout(()=>{
+  const a=document.activeElement;
+  setInputActive(!!(a&&a.matches&&a.matches('input,select,textarea')));
+},120));
 
 function openInvModal(editId){
   document.getElementById('inv-edit-id').value=editId||'';
@@ -1036,7 +1031,6 @@ function openInvModal(editId){
     toggleInvGoalFields();
   }
   openModal('modal-invest');
-  setTimeout(()=>document.getElementById('inv-name').focus(),400);
 }
 function toggleInvGoalFields(){
   const type=document.getElementById('inv-type').value;
@@ -1057,7 +1051,6 @@ function openInvUpdate(id){
   document.getElementById('upd-current').value=String(inv.current).replace('.',',');
   document.getElementById('upd-add').value='';
   openModal('modal-inv-update');
-  setTimeout(()=>document.getElementById('upd-current').focus(),400);
 }
 
 /* ── CATS ── */
@@ -1089,7 +1082,6 @@ function openDespesaModal(){
   document.getElementById('exp-type').value='variable';
   renderCatsGrid();
   openModal('modal-despesa');
-  setTimeout(()=>document.getElementById('exp-amount').focus(),420);
 }
 document.getElementById('fab-btn').onclick=()=>{
   if(currentPage==='investimentos')openInvModal();
@@ -1204,19 +1196,37 @@ function saveSalary(){
 
 function updateSalaryBadge(){
   const d=loadData();
-  document.getElementById('salary-badge-val').textContent=d.salary?fmtS(d.salary):'— €';
+  const sal=d.salary||0;
+  const incomeEl=document.getElementById('settings-income-val');
+  if(incomeEl)incomeEl.textContent=sal?fmt(sal):'— €';
+
+  const badge=document.getElementById('salary-badge-val');
+  const sub=document.getElementById('salary-badge-sub');
+  if(!badge)return;
+  if(!sal){
+    badge.textContent='— €';
+    if(sub)sub.textContent='set income in Settings';
+    badge.style.color='var(--muted)';
+    return;
+  }
+  const nowDate=new Date();
+  const expenses=getMonthExp(nowDate.getMonth(),nowDate.getFullYear()).reduce((sum,e)=>sum+(Number(e.amount)||0),0);
+  const invested=getMonthInvestmentTotal(nowDate.getMonth(),nowDate.getFullYear());
+  const balance=cents(sal-expenses-invested);
+  badge.textContent=fmt(balance);
+  badge.style.color=balance>=0?'var(--green)':'var(--red)';
+  if(sub)sub.textContent='left this month';
 }
 
-/* ── OPEN SALARY MODAL ── */
-document.querySelector('.salary-badge').onclick=()=>{
+/* ── OPEN INCOME MODAL ── */
+function openIncomeModal(){
   const d=loadData();
-  document.getElementById('salary-input').value=d.salary?String(d.salary).replace('.',','):'';
-  openModal('modal-salary');
-  setTimeout(()=>document.getElementById('salary-input').focus(),420);
-};
+  document.getElementById("salary-input").value=d.salary?String(d.salary).replace(".",","):"";
+  openModal("modal-salary");
+}
 
 /* ── RENDER ALL ── */
-function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes')renderPlano();if(currentPage==='objetivos')renderGoals();}
+function renderAll(){renderExpenses();renderInvestments();renderGoals();updateSalaryBadge();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes'){renderPlano();updateSalaryBadge();}if(currentPage==='objetivos')renderGoals();}
 
 function getFixedCostTotal(){
   const d=loadData();
@@ -1337,7 +1347,6 @@ function openFixedCostModal(id){
   document.getElementById('fixed-amount').value=f?String(f.amount).replace('.',','):'';
   document.getElementById('fixed-cat').value=f?(f.cat||'outro'):'casa';
   openModal('modal-fixed-cost');
-  setTimeout(()=>document.getElementById('fixed-name').focus(),350);
 }
 function syncFixedBudget(d){
   const sal=d.salary||0;
@@ -1533,7 +1542,6 @@ function openGoalModal(id){
   document.getElementById('goal-current').value=g?String(g.current).replace('.',','):'';
   document.getElementById('goal-modal-title').childNodes[0].textContent=g?'Edit goal ':'New goal ';
   openModal('modal-goal');
-  setTimeout(()=>document.getElementById('goal-name').focus(),350);
 }
 function saveGoal(){
   const id=document.getElementById('goal-id').value;
@@ -1574,7 +1582,6 @@ function openGoalAdd(id){
   document.getElementById('goal-add-amount').value='';
   document.getElementById('goal-add-title').childNodes[0].textContent='Add a '+g.name+' ';
   openModal('modal-goal-add');
-  setTimeout(()=>document.getElementById('goal-add-amount').focus(),350);
 }
 function addGoalSaving(){
   const id=parseInt(document.getElementById('goal-add-id').value);
@@ -1613,11 +1620,11 @@ function goalCardHtml(g){
   return `<div class="goal-card">
     <div class="goal-head">
       <div class="goal-title"><span class="goal-emoji">${renderGoalIcon(g.icon)}</span><span>${g.name}</span></div>
-      <div class="goal-money">${fmtS(g.current||0)}<div class="goal-sub">faltam ${fmtS(left)}</div></div>
+      <div class="goal-money">${fmtS(g.current||0)}<div class="goal-sub">left ${fmtS(left)}</div></div>
     </div>
     <div class="goal-progress"><div style="width:${pct}%"></div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-      <span class="goal-sub">${pct}% de ${fmtS(g.target||0)}</span>
+      <span class="goal-sub">${pct}% of ${fmtS(g.target||0)}</span>
       <span>
         <button class="edit-badge" onclick="openGoalAdd(${g.id})">+ save</button>
         <button class="edit-badge" onclick="openGoalModal(${g.id})">edit</button>
@@ -1842,7 +1849,7 @@ function selectCalendarDay(day){selectedCalendarDay=day;renderSpendingCalendar()
 
 /* ── BACKUP ── */
 
-function exportData(){const data=loadData();const payload=JSON.stringify({version:'trackr_v21',exportedAt:new Date().toISOString(),data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('✓ Backup exported');}
+function exportData(){const data=loadData();const payload=JSON.stringify({version:'trackr_v26',exportedAt:new Date().toISOString(),data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('✓ Backup exported');}
 function importData(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const data=parsed.data||parsed;if(!data||!Array.isArray(data.expenses)||!Array.isArray(data.investments))throw new Error('invalid');saveData(data);event.target.value='';showToast('✓ Data imported');updateSalaryBadge();renderAll();renderFixedCosts();renderGoals();}catch(e){showToast('Invalid file')}};reader.readAsText(file);}
 
 /* ── INIT ── */
