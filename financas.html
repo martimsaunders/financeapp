@@ -69,7 +69,7 @@ body{padding:0}
 .tab:nth-child(2)::before{content:'📈'}
 .tab:nth-child(3)::before{content:'📊'}
 .tab:nth-child(4)::before{content:'🎯'}
-.tab:nth-child(5)::before{content:'🏆'}
+.tab:nth-child(5)::before{content:'⚙️'}
 .tab.active{background:#fff;color:var(--accent);box-shadow:0 8px 18px rgba(87,82,163,.12)}
 .tab:active{transform:scale(.93)}
 
@@ -325,8 +325,8 @@ canvas{border-radius:18px}
     <button class="tab active" onclick="showPage('despesas')">Despesas</button>
     <button class="tab" onclick="showPage('investimentos')">Invest.</button>
     <button class="tab" onclick="showPage('resumo')">Resumo</button>
-    <button class="tab" onclick="showPage('plano')">Plano</button>
     <button class="tab" onclick="showPage('objetivos')">Objetivos</button>
+    <button class="tab" onclick="showPage('definicoes')">Definições</button>
   </div>
 
   <div class="pages">
@@ -427,14 +427,23 @@ canvas{border-radius:18px}
       </div>
     </div>
 
-    <!-- ── PLANO ── -->
-    <div class="page" id="page-plano">
+    <!-- ── DEFINIÇÕES ── -->
+    <div class="page" id="page-definicoes">
       <div class="card">
-        <div class="card-title">Distribuição do ordenado</div>
+        <div class="card-title">Definições</div>
+        <div style="font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:6px">Ajustes da app</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">Plano mensal, dados e preferências ficam aqui.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Plano mensal</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Define o destino do teu ordenado todos os meses.</div>
         <div class="budget-stacked" id="budget-stacked"></div>
         <div class="budget-section" id="budget-sliders"></div>
         <div class="budget-total-warn" id="budget-warn"></div>
+      </div>
+      <div class="card" id="plano-vals-card" style="display:none">
+        <div class="card-title">Valores mensais</div>
+        <div id="plano-vals"></div>
       </div>
       <div class="card">
         <div class="card-title">Dados</div>
@@ -445,12 +454,7 @@ canvas{border-radius:18px}
         </div>
         <input class="file-hidden" type="file" id="import-file" accept="application/json,.json" onchange="importData(event)">
       </div>
-      <div class="card" id="plano-vals-card" style="display:none">
-        <div class="card-title">Valores mensais com base no ordenado</div>
-        <div id="plano-vals"></div>
-      </div>
-    </div>
-  </div>
+    </div>  </div>
 
   <button class="fab" id="fab-btn">＋</button>
 </div>
@@ -561,7 +565,7 @@ canvas{border-radius:18px}
       <button class="small-pill" onclick="openFixedCostModal()">+ custo</button>
     </div>
     <div id="fixed-cost-list"></div>
-    <button class="btn-secondary" onclick="syncFixedBudgetFromUI()">Ajustar % dos fixos no Plano</button>
+    <button class="btn-secondary" onclick="syncFixedBudgetFromUI()">Atualizar plano mensal</button>
   </div>
 </div>
 
@@ -764,9 +768,9 @@ function showPage(p){
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
-  ['despesas','investimentos','resumo','plano','objetivos'].forEach((n,i)=>{if(n===p)document.querySelectorAll('.tab')[i].classList.add('active')});
+  ['despesas','investimentos','resumo','objetivos','definicoes'].forEach((n,i)=>{if(n===p)document.querySelectorAll('.tab')[i].classList.add('active')});
   const fabEl=document.getElementById('fab-btn');
-  if(p==='resumo'||p==='plano'){
+  if(p==='resumo'||p==='definicoes'){
     fabEl.style.display='none';
   }else{
     fabEl.style.display='flex';
@@ -774,7 +778,7 @@ function showPage(p){
     fabEl.setAttribute('aria-label',p==='investimentos'?'Adicionar investimento':p==='objetivos'?'Adicionar objetivo':'Adicionar despesa');
   }
   if(p==='resumo')renderResumo();
-  if(p==='plano')renderPlano();
+  if(p==='definicoes')renderPlano();
   if(p==='objetivos')renderGoals();
 }
 
@@ -977,7 +981,7 @@ document.querySelector('.salary-badge').onclick=()=>{
 };
 
 /* ── RENDER ALL ── */
-function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderResumo();if(currentPage==='plano')renderPlano();if(currentPage==='objetivos')renderGoals();}
+function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderResumo();if(currentPage==='definicoes')renderPlano();if(currentPage==='objetivos')renderGoals();}
 
 function getFixedCostTotal(){
   const d=loadData();
