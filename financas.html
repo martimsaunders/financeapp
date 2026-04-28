@@ -739,11 +739,19 @@ function loadData(){
     if(!d.fixedCosts)d.fixedCosts=[];
     if(!d.fixedPaid)d.fixedPaid={};
     if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
+    d.expenses=d.expenses.map(e=>({...e,amount:cents(e.amount)}));
+    d.fixedCosts=d.fixedCosts.map(f=>({...f,amount:cents(f.amount)}));
     d.investments=d.investments.map(inv=>{
+      inv.invested=cents(inv.invested);
+      inv.current=cents(inv.current);
+      if(inv.target!==undefined)inv.target=cents(inv.target);
       if(!inv.contributions){inv.contributions=[{amount:inv.invested||0,date:inv.date||new Date().toISOString()}];}
+      inv.contributions=inv.contributions.map(c=>({...c,amount:cents(c.amount)}));
       if(!inv.date)inv.date=inv.contributions[0]?.date||new Date().toISOString();
       return inv;
     });
+    d.goals=d.goals.map(g=>({...g,current:cents(g.current),target:cents(g.target)}));
+    d.salary=cents(d.salary);
     return syncGoalsWithInvestments(d);
   }
   catch(e){return{expenses:[],investments:[],salary:0,budget:{fixos:20,variaveis:30,invest:20,poupanca:30},goals:[],fixedCosts:[],fixedPaid:{}}}
@@ -785,9 +793,21 @@ function syncGoalsWithInvestments(d){
 }
 
 /* ── PARSE / FORMAT ── */
-function parseAmt(s){if(!s)return NaN;return parseFloat(s.trim().replace(/\s/g,'').replace(',','.'))}
-function fmt(n){return n.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
-function fmtS(n){return n.toLocaleString('pt-PT',{minimumFractionDigits:0,maximumFractionDigits:0})+' €'}
+function cents(n){
+  const v=Number(n);
+  return Number.isFinite(v)?Math.round((v+Number.EPSILON)*100)/100:0;
+}
+function parseAmt(s){
+  if(!s)return NaN;
+  const raw=String(s).trim().replace(/\s/g,'').replace(/€/g,'');
+  let clean=raw;
+  if(raw.includes(',')&&raw.includes('.')) clean=raw.replace(/\./g,'').replace(',','.');
+  else clean=raw.replace(',','.');
+  const n=parseFloat(clean);
+  return Number.isFinite(n)?cents(n):NaN;
+}
+function fmt(n){return cents(n).toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
+function fmtS(n){return fmt(n)}
 
 /* ── DATE ── */
 const now=new Date();
@@ -974,8 +994,8 @@ function saveInvestment(){
   if(editId){
     const inv=d.investments.find(i=>i.id==editId);
     if(inv){
-      inv.invested+=addAmt;
-      inv.current+=addAmt;
+      inv.invested=cents(inv.invested+addAmt);
+      inv.current=cents(inv.current+addAmt);
       const target=parseAmt(document.getElementById('inv-goal-target').value);
       if(isGoalInvestment(inv)&&target>0)inv.target=target;
       if(!inv.contributions)inv.contributions=[];
@@ -993,8 +1013,8 @@ function saveInvestment(){
       existing=d.investments.find(i=>isGoalInvestment(i)&&String(i.name||'').trim().toLowerCase()===name.toLowerCase());
     }
     if(existing){
-      existing.invested+=addAmt;
-      existing.current+=addAmt;
+      existing.invested=cents(existing.invested+addAmt);
+      existing.current=cents(existing.current+addAmt);
       if(target>0)existing.target=target;
       if(!existing.contributions)existing.contributions=[];
       existing.contributions.push({amount:addAmt,date:new Date().toISOString()});
@@ -1016,9 +1036,9 @@ function saveInvUpdate(){
   const d=loadData();
   const inv=d.investments.find(i=>i.id===id);
   if(inv){
-    inv.current=newCur+addCap;
+    inv.current=cents(newCur+addCap);
     if(addCap>0){
-      inv.invested+=addCap;
+      inv.invested=cents(inv.invested+addCap);
       if(!inv.contributions)inv.contributions=[];
       inv.contributions.push({amount:addCap,date:new Date().toISOString()});
     }
@@ -1353,11 +1373,11 @@ function saveGoal(){
   }else{
     let inv=d.investments.find(i=>isGoalInvestment(i)&&String(i.name||'').trim().toLowerCase()===name.toLowerCase());
     if(!inv){
-      inv={id:Date.now(),name,type:'Objetivo',invested:Math.min(current,target),current:Math.min(current,target),target,date:new Date().toISOString(),contributions:current>0?[{amount:Math.min(current,target),date:new Date().toISOString()}]:[]};
+      inv={id:Date.now(),name,type:'Objetivo',invested:cents(Math.min(current,target)),current:cents(Math.min(current,target)),target,date:new Date().toISOString(),contributions:current>0?[{amount:cents(Math.min(current,target)),date:new Date().toISOString()}]:[]};
       d.investments.push(inv);
     }else{
       inv.target=target;
-      if(current>0 && (inv.current||0)===0){inv.current=Math.min(current,target);inv.invested=Math.min(current,target);inv.contributions=[{amount:Math.min(current,target),date:new Date().toISOString()}];}
+      if(current>0 && (inv.current||0)===0){inv.current=cents(Math.min(current,target));inv.invested=cents(Math.min(current,target));inv.contributions=[{amount:cents(Math.min(current,target)),date:new Date().toISOString()}];}
     }
     d.goals.push({id:Date.now()+1,name,target,current:inv.current||0,icon:goalIcon,date:new Date().toISOString(),linkedInvestmentId:inv.id});
   }
@@ -1384,8 +1404,8 @@ function addGoalSaving(){
       d.investments.push(inv);g.linkedInvestmentId=inv.id;
     }
     inv.type='Objetivo';
-    inv.invested=(Number(inv.invested)||0)+amount;
-    inv.current=(Number(inv.current)||0)+amount;
+    inv.invested=cents((Number(inv.invested)||0)+amount);
+    inv.current=cents((Number(inv.current)||0)+amount);
     inv.target=g.target;
     if(!inv.contributions)inv.contributions=[];
     inv.contributions.push({amount,date:new Date().toISOString()});
