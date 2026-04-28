@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f6f4ec">
 <meta name="apple-mobile-web-app-title" content="Trackr">
 <meta name="application-name" content="Trackr">
@@ -43,8 +43,7 @@
   --accent:#8c7bff;--accent2:#b7a8ff;--green:#4ade80;--red:#fb7185;--yellow:#fbbf24;--blue:#60a5fa;--teal:#2dd4bf;--orange:#fb923c;--pink:#f472b6;
   --text:#f4f2ff;--muted:#9b98bd;--shadow:0 14px 32px rgba(0,0,0,.24);
 }
-[data-theme="dark"] .card,[data-theme="dark"] .kpi,[data-theme="dark"] .salary-badge,[data-theme="dark"] .month-nav,[data-theme="dark"] .tabs{background:rgba(32,33,53,.88);border-color:rgba(255,255,255,.08)}
-[data-theme="dark"] .tabs{box-shadow:0 -8px 22px rgba(0,0,0,.20), 0 0 0 1px rgba(255,255,255,.06), 0 1px 0 rgba(255,255,255,.08) inset}
+[data-theme="dark"] .card,[data-theme="dark"] .kpi,[data-theme="dark"] .salary-badge,[data-theme="dark"] .month-nav,[data-theme="dark"] .tabs{background:rgba(32,33,53,.82);border-color:rgba(255,255,255,.08)}
 [data-theme="dark"] .modal{background:#202135}
 [data-theme="dark"] .tab.active{background:#2b2c45;color:var(--accent2)}
 [data-theme="dark"] .field input,[data-theme="dark"] .field select{background:#292a42;color:var(--text);border-color:#3c3d58}
@@ -86,7 +85,7 @@ body::after{content:none}
 .sal-mini{font-size:10px;color:var(--muted);font-weight:800;margin-top:2px;white-space:nowrap}
 
 /* TABS */
-.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(4px + env(safe-area-inset-bottom));width:calc(100% - 28px);max-width:402px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:9px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.92);border-radius:28px;box-shadow:0 -8px 22px rgba(41,45,80,.10), 0 0 0 1px rgba(255,255,255,.55), 0 1px 0 rgba(255,255,255,.75) inset;z-index:300;will-change:transform}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(4px + env(safe-area-inset-bottom));width:calc(100% - 28px);max-width:402px;display:grid;grid-template-columns:repeat(5,1fr);gap:5px;padding:9px;background:rgba(255,255,255,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.92);border-radius:28px;box-shadow:none;z-index:300;will-change:transform}
 .tab{min-height:56px;padding:8px 4px;border-radius:18px;border:none;background:transparent;color:var(--muted);font-size:10px;font-weight:800;cursor:pointer;transition:background .22s,color .22s,transform .15s var(--spring),box-shadow .22s;letter-spacing:.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
 .tab::before{display:none}
 .tab-ico{width:21px;height:21px;display:flex;align-items:center;justify-content:center;color:currentColor}
@@ -386,6 +385,27 @@ body::after{content:none}
 .inv-status{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.35}
 .inv-status.good{color:var(--green)}
 .inv-status.bad{color:var(--red)}
+
+
+/* v37: restore v34 bottom nav visibility - no bottom bubble/shadow */
+.tabs{box-shadow:none !important;}
+[data-theme="dark"] .tabs{box-shadow:none !important;background:rgba(32,33,53,.82) !important;}
+body::after{content:none !important;}
+
+/* v39: natural overlay + matching iPhone top/status area */
+html{background:#f6f4ec !important;}
+html[data-theme="dark"]{background:#0f1020 !important;}
+body::before{background:var(--bg) !important;z-index:1 !important;}
+html[data-theme="dark"] body::before{background:#0f1020 !important;}
+/* Match only the safe-area strip to the same dimmed colour as the overlay, instead of leaving it white or covering the whole app. */
+body.modal-open::before{background:#c3c0bd !important;}
+html[data-theme="dark"] body.modal-open::before{background:#090a14 !important;}
+.modal-overlay{align-items:flex-end !important;background:rgba(17,18,31,0) !important;}
+.modal-overlay.open{background:rgba(17,18,31,.22) !important;pointer-events:all !important;}
+html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34) !important;}
+.modal{width:calc(100% - 16px) !important;max-width:414px !important;max-height:min(76svh, 680px) !important;margin:0 auto max(10px, env(safe-area-inset-bottom)) !important;border-radius:30px !important;box-shadow:0 -10px 28px rgba(41,45,80,.08) !important;}
+@supports not (height:1svh){.modal{max-height:76vh !important;}}
+.tabs{box-shadow:none !important;}
 
 </style>
 </head>
@@ -933,7 +953,7 @@ function applyTheme(theme){
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta)meta.setAttribute('content',theme==='dark'?'#0f1020':'#f6f4ec');
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(appleStatus)appleStatus.setAttribute('content',theme==='dark'?'black':'default');
+  if(appleStatus)appleStatus.setAttribute('content',theme==='dark'?'black-translucent':'default');
 }
 function toggleTheme(){
   const cur=document.documentElement.getAttribute('data-theme')||'light';
@@ -1014,9 +1034,9 @@ function openModal(id){
   document.body.classList.add('modal-open');
   const theme=document.documentElement.getAttribute('data-theme')||'light';
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',theme==='dark'?'#0f1020':'#f6f4ec');
+  if(meta)meta.setAttribute('content',theme==='dark'?'#090a14':'#c3c0bd');
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(appleStatus)appleStatus.setAttribute('content',theme==='dark'?'black':'default');
+  if(appleStatus)appleStatus.setAttribute('content',theme==='dark'?'black-translucent':'default');
 }
 
 function closeModal(id){
