@@ -152,6 +152,27 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 .del-btn{background:none;border:none;color:#bbb6cb;font-size:20px;cursor:pointer;opacity:.65;padding:2px 4px;transition:opacity .12s,color .12s;line-height:1}
 .del-btn:active{opacity:1;color:var(--red)}
 
+
+/* Compact investment cards */
+.inv-card-compact{display:grid;grid-template-columns:52px minmax(0,1fr) auto 40px;align-items:center;gap:12px}
+.inv-main-value{text-align:right;min-width:78px;max-width:112px}
+.inv-main-value .inv-val{white-space:nowrap;font-size:15px;line-height:1.15}
+.inv-main-value .inv-gain{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:112px}
+.inv-menu-btn{width:38px;height:38px;border:none;border-radius:14px;background:var(--surface2);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;line-height:1;cursor:pointer;transition:background .15s,transform .13s var(--spring),color .15s}
+.inv-menu-btn:active{transform:scale(.94);background:var(--surface3);color:var(--accent)}
+.inv-detail-hero{background:var(--surface2);border-radius:24px;padding:16px;margin-bottom:14px}
+.inv-detail-title{font-size:13px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.inv-detail-value{font-size:32px;font-weight:950;letter-spacing:-1.4px;color:var(--text)}
+.inv-detail-gain{font-size:13px;font-weight:900;margin-top:4px}
+.inv-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.inv-detail-box{background:var(--surface2);border-radius:18px;padding:13px;border:1px solid var(--border)}
+.inv-detail-box span{display:block;font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px}
+.inv-detail-box strong{display:block;font-size:15px;color:var(--text);font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.inv-detail-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.inv-detail-actions .btn-secondary{margin-top:0}
+.danger-btn{background:rgba(239,125,115,.10)!important;color:var(--red)!important;border-color:rgba(239,125,115,.18)!important}
+@media (max-width:360px){.inv-card-compact{grid-template-columns:46px minmax(0,1fr) 34px}.inv-main-value{display:none}.inv-menu-btn{width:34px;height:34px}.inv-ticker{width:46px;height:46px;border-radius:16px}.inv-detail-grid{grid-template-columns:1fr}}
+
 /* KPI */
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .kpi{background:rgba(255,255,255,.88);border-radius:24px;padding:16px;border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow)}
@@ -320,6 +341,14 @@ canvas{border-radius:18px}
 [data-theme="dark"] .exp-icon,
 [data-theme="dark"] .inv-ticker{box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
 
+/* v20 keyboard + investment tracking polish */
+.modal{max-height:min(93dvh, calc(var(--normal-height, 100vh) - 12px));padding-bottom:max(52px, calc(28px + env(safe-area-inset-bottom)))}
+.keyboard-open .modal{max-height:calc(var(--keyboard-height, 100vh) - 16px);padding-bottom:24px}
+.keyboard-open .tabs,.keyboard-open .fab{opacity:0;pointer-events:none}
+.inv-status{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.35}
+.inv-status.good{color:var(--green)}
+.inv-status.bad{color:var(--red)}
+
 </style>
 </head>
 <body>
@@ -392,10 +421,7 @@ canvas{border-radius:18px}
         <div style="font-size:12px;color:var(--muted);margin-top:6px" id="inv-sal-text"></div>
       </div>
       <div class="card">
-        <div class="card-head">
-          <div class="card-title">Portfolio</div>
-          <button class="icon-chip" onclick="refreshMarketPrices()" aria-label="Refresh market prices"><span data-icon="refresh"></span><span>Sync</span></button>
-        </div>
+        <div class="card-title">Portfolio</div>
         <div id="invest-list"></div>
       </div>
     </div>
@@ -466,12 +492,6 @@ canvas{border-radius:18px}
       </div>
 
       <div class="card">
-        <div class="card-title">Market prices</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Add an Alpha Vantage API key to update stocks and ETFs automatically.</div>
-        <div class="field"><label>Alpha Vantage API key</label><input type="password" id="market-api-key" placeholder="Paste your API key" autocomplete="off"></div>
-        <button class="btn-secondary" onclick="saveMarketApiKey()" style="margin-top:0">Save API key</button>
-      </div>
-      <div class="card">
         <div class="card-title">Data</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Save a copy before replacing the app file.</div>
         <div class="backup-actions">
@@ -530,19 +550,13 @@ canvas{border-radius:18px}
         <option value="Other">Other</option>
       </select>
     </div>
-    <div class="field" id="inv-market-symbol-field"><label>Market symbol</label>
-      <input type="text" id="inv-symbol" placeholder="e.g. AAPL, MSFT, VUAA.LON" autocomplete="off">
-    </div>
-    <div class="field" id="inv-units-field"><label>Units / shares</label>
-      <input type="text" inputmode="decimal" id="inv-units" placeholder="0.00" autocomplete="off">
-    </div>
-    <div class="field"><label id="inv-amount-label">Amount to invest now (€)</label>
+    <div class="field"><label id="inv-amount-label">Amount paid now (€)</label>
       <div class="amount-wrap">
         <input type="text" inputmode="decimal" id="inv-invested" placeholder="0,00" autocomplete="off">
         <span class="cur">€</span>
       </div>
     </div>
-    <div class="field" id="inv-current-field"><label>Current market value (€)</label>
+    <div class="field" id="inv-current-field"><label>Current value (€)</label>
       <div class="amount-wrap">
         <input type="text" inputmode="decimal" id="inv-current" placeholder="0,00" autocomplete="off">
         <span class="cur">€</span>
@@ -565,7 +579,7 @@ canvas{border-radius:18px}
     <div class="modal-handle"></div>
     <h2 id="upd-title">Update <button class="modal-close" onclick="closeModal('modal-inv-update')">✕</button></h2>
     <input type="hidden" id="upd-id">
-    <div class="field"><label>New current market value (€)</label>
+    <div class="field"><label>New current value (€)</label>
       <div class="amount-wrap">
         <input type="text" inputmode="decimal" id="upd-current" placeholder="0,00" autocomplete="off">
         <span class="cur">€</span>
@@ -577,12 +591,37 @@ canvas{border-radius:18px}
         <span class="cur">€</span>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Update the market value and optionally register extra capital.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Update the current value and optionally register extra capital.</div>
     <button class="btn-primary" onclick="saveInvUpdate()">Update</button>
   </div>
 </div>
 
 
+
+<!-- MODAL INVESTMENT DETAILS -->
+<div class="modal-overlay" id="modal-inv-details" onclick="overlayClick(event,'modal-inv-details')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="inv-details-title">Investment <button class="modal-close" onclick="closeModal('modal-inv-details')">✕</button></h2>
+    <input type="hidden" id="inv-details-id">
+    <div class="inv-detail-hero">
+      <div class="inv-detail-title">Current value</div>
+      <div class="inv-detail-value" id="inv-details-current">0,00 €</div>
+      <div class="inv-detail-gain" id="inv-details-gain">0,00 €</div>
+    </div>
+    <div class="inv-detail-grid">
+      <div class="inv-detail-box"><span>Type</span><strong id="inv-details-type">—</strong></div>
+      <div class="inv-detail-box"><span>Invested</span><strong id="inv-details-invested">0,00 €</strong></div>
+      <div class="inv-detail-box"><span>This month</span><strong id="inv-details-month">0,00 €</strong></div>
+      <div class="inv-detail-box"><span>Return</span><strong id="inv-details-return">0.0%</strong></div>
+    </div>
+    <div class="inv-detail-actions">
+      <button class="btn-secondary" onclick="buyMoreFromDetails()">Buy more</button>
+      <button class="btn-secondary" onclick="updateValueFromDetails()">Update value</button>
+    </div>
+    <button class="btn-secondary danger-btn" onclick="deleteInvFromDetails()">Delete investment</button>
+  </div>
+</div>
 
 <!-- MODAL GERIR CUSTOS FIXOS -->
 <div class="modal-overlay" id="modal-fixed-manager" onclick="overlayClick(event,'modal-fixed-manager')">
@@ -759,6 +798,7 @@ function loadData(){
     if(!d.goals)d.goals=[];
     if(!d.fixedCosts)d.fixedCosts=[];
     if(!d.fixedPaid)d.fixedPaid={};
+    if(!d.settings)d.settings={};
     if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
     d.expenses=d.expenses.map(e=>({...e,amount:cents(e.amount)}));
     d.fixedCosts=d.fixedCosts.map(f=>({...f,amount:cents(f.amount)}));
@@ -775,7 +815,7 @@ function loadData(){
     d.salary=cents(d.salary);
     return syncGoalsWithInvestments(d);
   }
-  catch(e){return{expenses:[],investments:[],salary:0,budget:{fixos:20,variaveis:30,invest:20,poupanca:30},goals:[],fixedCosts:[],fixedPaid:{}}}
+  catch(e){return{expenses:[],investments:[],salary:0,budget:{fixos:20,variaveis:30,invest:20,poupanca:30},goals:[],fixedCosts:[],fixedPaid:{},settings:{}}}
 }
 function saveData(d){localStorage.setItem('fin_v6',JSON.stringify(syncGoalsWithInvestments(d)))}
 
@@ -855,12 +895,24 @@ hydrateStaticIcons();
 applyTheme(localStorage.getItem('fin_theme')||'light');
 
 /* iOS/PWA viewport refresh fix */
+let lastNormalHeight=window.innerHeight;
 function fixIOSViewport(){
   const app=document.querySelector('.app');
   if(!app)return;
-  const h=(window.visualViewport&&window.visualViewport.height)?window.visualViewport.height:window.innerHeight;
-  app.style.height=h+'px';
-  document.documentElement.style.setProperty('--app-height',h+'px');
+  const vv=window.visualViewport;
+  const h=(vv&&vv.height)?vv.height:window.innerHeight;
+  const keyboardOpen=vv && h < window.innerHeight*0.78;
+  document.body.classList.toggle('keyboard-open',!!keyboardOpen);
+  document.documentElement.style.setProperty('--keyboard-height',h+'px');
+  if(!keyboardOpen){
+    lastNormalHeight=h;
+    app.style.height=h+'px';
+    document.documentElement.style.setProperty('--app-height',h+'px');
+    document.documentElement.style.setProperty('--normal-height',h+'px');
+  }else{
+    app.style.height=lastNormalHeight+'px';
+    document.documentElement.style.setProperty('--app-height',lastNormalHeight+'px');
+  }
 }
 window.addEventListener('resize',fixIOSViewport,{passive:true});
 if(window.visualViewport)window.visualViewport.addEventListener('resize',fixIOSViewport,{passive:true});
@@ -898,17 +950,16 @@ document.getElementById('fab-btn').onclick=()=>{
 };
 
 /* ── MODAL ── */
-function openModal(id){document.getElementById(id).classList.add('open')}
+function openModal(id){document.getElementById(id).classList.add('open');setTimeout(()=>{const el=document.getElementById(id);const active=el?.querySelector('input,select,textarea');if(active&&document.body.classList.contains('keyboard-open'))active.scrollIntoView({block:'center',behavior:'smooth'});},250)}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 function overlayClick(e,id){if(e.target===document.getElementById(id))closeModal(id)}
+document.addEventListener('focusin',e=>{if(e.target.matches('input,select,textarea'))setTimeout(()=>e.target.scrollIntoView({block:'center',behavior:'smooth'}),260);});
 
 function openInvModal(editId){
   document.getElementById('inv-edit-id').value=editId||'';
   document.getElementById('inv-name').value='';
   document.getElementById('inv-invested').value='';
   document.getElementById('inv-current').value='';
-  document.getElementById('inv-symbol').value='';
-  document.getElementById('inv-units').value='';
   document.getElementById('inv-goal-target').value='';
   document.getElementById('inv-current-field').style.display='block';
   document.getElementById('inv-goal-target-field').style.display='none';
@@ -916,26 +967,24 @@ function openInvModal(editId){
     const d=loadData();
     const inv=d.investments.find(i=>i.id===editId);
     if(inv){
-      document.getElementById('inv-modal-title').childNodes[0].textContent='Add a '+inv.name+' ';
+      document.getElementById('inv-modal-title').childNodes[0].textContent='Add to '+inv.name+' ';
       document.getElementById('inv-name').value=inv.name;
       document.getElementById('inv-name').disabled=true;
       document.getElementById('inv-type').value=inv.type;
       document.getElementById('inv-type').disabled=true;
-      document.getElementById('inv-symbol').value=inv.symbol||'';
-      document.getElementById('inv-units').value=inv.units?String(inv.units).replace('.',','):'';
       document.getElementById('inv-amount-label').textContent='New capital to add (€)';
-      document.getElementById('inv-current-field').style.display='none';
       document.getElementById('inv-save-btn').textContent='Add capital';
       const g=(d.goals||[]).find(x=>String(x.linkedInvestmentId)===String(inv.id));
       document.getElementById('inv-goal-target').value=(g?.target||inv.target)?String(g?.target||inv.target).replace('.',','):'';
       toggleInvGoalFields();
+      if(!isGoalInvestment(inv))document.getElementById('inv-current-field').style.display='block';
     }
   } else {
     document.getElementById('inv-modal-title').childNodes[0].textContent='Investment ';
     document.getElementById('inv-name').disabled=false;
     document.getElementById('inv-type').disabled=false;
     document.getElementById('inv-type').value='ETF';
-    document.getElementById('inv-amount-label').textContent='Amount to invest now (€)';
+    document.getElementById('inv-amount-label').textContent='Amount invested now (€)';
     document.getElementById('inv-save-btn').textContent='Save';
     toggleInvGoalFields();
   }
@@ -946,16 +995,12 @@ function toggleInvGoalFields(){
   const type=document.getElementById('inv-type').value;
   const goalField=document.getElementById('inv-goal-target-field');
   const currentField=document.getElementById('inv-current-field');
-  const symbolField=document.getElementById('inv-market-symbol-field');
-  const unitsField=document.getElementById('inv-units-field');
+  const amountLabel=document.getElementById('inv-amount-label');
   const isGoal=type==='Goal'||type==='Objetivo';
-  const canTrack=type==='ETF'||type==='Stock'||type==='Stock'||type==='Acção';
   if(goalField)goalField.style.display=isGoal?'block':'none';
   if(currentField)currentField.style.display=isGoal?'none':'block';
-  if(symbolField)symbolField.style.display=canTrack?'block':'none';
-  if(unitsField)unitsField.style.display=canTrack?'block':'none';
+  if(amountLabel)amountLabel.textContent=isGoal?'Amount to save now (€)':'Amount invested now (€)';
 }
-
 function openInvUpdate(id){
   const d=loadData();
   const inv=d.investments.find(i=>i.id===id);
@@ -1021,50 +1066,61 @@ function saveExpense(){
 /* ── SAVE INVESTMENT ── */
 function saveInvestment(){
   const editId=document.getElementById('inv-edit-id').value;
-  const addAmt=parseAmt(document.getElementById('inv-invested').value);
-  if(!addAmt||addAmt<=0){showToast('Invalid amount');return}
-  if(!validateMoney(addAmt))return
   const d=loadData();
 
   if(editId){
     const inv=d.investments.find(i=>i.id==editId);
-    if(inv){
-      inv.invested=cents(inv.invested+addAmt);
-      inv.current=cents(inv.current+addAmt);
-      const target=parseAmt(document.getElementById('inv-goal-target').value);
-      const addUnits=parseAmt(document.getElementById('inv-units').value)||0;
-      if(!validateMoney(addUnits)||!validateMoney(target||0))return;
-      if(addUnits>0)inv.units=cents((Number(inv.units)||0)+addUnits);
-      if(isGoalInvestment(inv)&&target>0)inv.target=target;
-      if(!inv.contributions)inv.contributions=[];
-      inv.contributions.push({amount:addAmt,date:new Date().toISOString()});
+    if(!inv)return;
+    const addAmt=parseAmt(document.getElementById('inv-invested').value);
+    const newCur=parseAmt(document.getElementById('inv-current').value);
+    const target=parseAmt(document.getElementById('inv-goal-target').value);
+    if(!addAmt||addAmt<=0){showToast('Add an amount');return}
+    if(!validateMoney(addAmt)||!validateMoney(newCur||0)||!validateMoney(target||0))return;
+
+    inv.invested=cents((Number(inv.invested)||0)+addAmt);
+    if(isGoalInvestment(inv)){
+      inv.current=cents((Number(inv.current)||0)+addAmt);
+      if(target>0)inv.target=target;
+    }else{
+      inv.current=(!isNaN(newCur)&&newCur>=0)?cents(newCur):cents((Number(inv.current)||0)+addAmt);
     }
+    if(!inv.contributions)inv.contributions=[];
+    inv.contributions.push({amount:addAmt,date:new Date().toISOString()});
   } else {
     const name=document.getElementById('inv-name').value.trim();
     if(!name){showToast('Add a name');return}
     const type=document.getElementById('inv-type').value;
-    const symbol=document.getElementById('inv-symbol').value.trim().toUpperCase();
-    const units=parseAmt(document.getElementById('inv-units').value)||0;
+    const addAmt=parseAmt(document.getElementById('inv-invested').value);
     const curRaw=parseAmt(document.getElementById('inv-current').value);
     const target=parseAmt(document.getElementById('inv-goal-target').value);
-    if((type==='Goal'||type==='Objetivo') && (!target||target<=0)){showToast('Set a goal amount');return}
-    if(!validateMoney(target)||!validateMoney(units)||!validateMoney(curRaw||0))return
+    const isGoal=(type==='Goal'||type==='Objetivo');
+
+    if(!addAmt||addAmt<=0){showToast('Add an amount');return}
+    if(isGoal && (!target||target<=0)){showToast('Set a goal amount');return}
+    if(!validateMoney(addAmt)||!validateMoney(curRaw||0)||!validateMoney(target||0))return;
+
     let existing=null;
-    if(type==='Goal'||type==='Objetivo'){
+    if(isGoal){
       existing=d.investments.find(i=>isGoalInvestment(i)&&String(i.name||'').trim().toLowerCase()===name.toLowerCase());
+    }else{
+      existing=d.investments.find(i=>!isGoalInvestment(i)&&String(i.name||'').trim().toLowerCase()===name.toLowerCase());
     }
+
     if(existing){
-      existing.invested=cents(existing.invested+addAmt);
-      existing.current=cents(existing.current+addAmt);
-      if(target>0)existing.target=target;
-      if(units>0)existing.units=cents((Number(existing.units)||0)+units);
-      if(symbol)existing.symbol=symbol;
+      existing.invested=cents((Number(existing.invested)||0)+addAmt);
+      if(isGoalInvestment(existing)){
+        existing.current=cents((Number(existing.current)||0)+addAmt);
+        if(target>0)existing.target=target;
+      }else{
+        existing.current=(!isNaN(curRaw)&&curRaw>=0)?cents(curRaw):cents((Number(existing.current)||0)+addAmt);
+      }
       if(!existing.contributions)existing.contributions=[];
       existing.contributions.push({amount:addAmt,date:new Date().toISOString()});
     }else{
+      const initialCurrent=isGoal?addAmt:(isNaN(curRaw)||curRaw<0?addAmt:curRaw);
       d.investments.push({id:Date.now(),name,type,
-        invested:addAmt,current:(type==='Goal'||type==='Objetivo')?addAmt:(isNaN(curRaw)||curRaw<=0?addAmt:curRaw),date:new Date().toISOString(),target:(type==='Goal'||type==='Objetivo')?target:undefined,symbol,units,
-        contributions:[{amount:addAmt,date:new Date().toISOString(),units:units||undefined}]});
+        invested:addAmt,current:initialCurrent,date:new Date().toISOString(),target:isGoal?target:undefined,
+        contributions:[{amount:addAmt,date:new Date().toISOString()}]});
     }
   }
   saveData(d);closeModal('modal-invest');showToast('✓ Saved');renderAll();
@@ -1113,7 +1169,7 @@ document.querySelector('.salary-badge').onclick=()=>{
 };
 
 /* ── RENDER ALL ── */
-function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes'){renderPlano();hydrateSettings();}if(currentPage==='objetivos')renderGoals();}
+function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes')renderPlano();if(currentPage==='objetivos')renderGoals();}
 
 function getFixedCostTotal(){
   const d=loadData();
@@ -1145,6 +1201,11 @@ function getMonthInvestmentContribs(m,y){
 function getMonthInvestmentTotal(m,y){
   return getMonthInvestmentContribs(m,y).reduce((s,c)=>s+(c.amount||0),0);
 }
+
+function escapeHtml(value){
+  return String(value??'').replace(/[&<>\"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+}
+
 
 /* ── RENDER EXPENSES ── */
 function renderExpenses(){
@@ -1338,8 +1399,8 @@ function renderInvestments(){
   const totCur=invs.reduce((s,i)=>s+i.current,0);
   const gain=totCur-totInv;
   const gainPct=totInv>0?gain/totInv*100:0;
-  document.getElementById('inv-total-invested').textContent=fmtS(totInv);
-  document.getElementById('inv-total-value').textContent=fmtS(totCur);
+  document.getElementById('inv-total-invested').textContent=fmt(totInv);
+  document.getElementById('inv-total-value').textContent=fmt(totCur);
   const ge=document.getElementById('inv-gain-eur');
   ge.textContent=(gain>=0?'+':'')+fmt(gain);ge.className='kpi-value '+(gain>=0?'green':'red');
   const gp=document.getElementById('inv-gain-pct');
@@ -1355,32 +1416,62 @@ function renderInvestments(){
     const pct=Math.min(monthInv/planLimit*100,100);
     document.getElementById('inv-sal-bar').style.width=pct+'%';
     const realPct=Math.round(monthInv/planLimit*100);
-    document.getElementById('inv-sal-text').textContent=`${fmtS(monthInv)} of ${fmtS(planLimit)} used this month (${realPct}%)`;
+    document.getElementById('inv-sal-text').textContent=`${fmt(monthInv)} of ${fmt(planLimit)} used this month (${realPct}%)`;
   } else invWrap.style.display='none';
 
   const html=invs.map((inv,idx)=>{
-    const g=inv.current-inv.invested;
+    const g=cents(inv.current-inv.invested);
     const gp2=inv.invested>0?g/inv.invested*100:0;
-    const monthTotal=(inv.contributions||[]).filter(c=>{const cd=new Date(c.date);return cd.getMonth()===now.getMonth()&&cd.getFullYear()===now.getFullYear()}).reduce((s,c)=>s+c.amount,0);
-    return `<div class="inv-item" style="animation-delay:${idx*25}ms">
+    return `<div class="inv-item inv-card-compact" style="animation-delay:${idx*25}ms">
       <div class="inv-ticker" style="color:${isGoalInvestment(inv)?'var(--green)':'var(--blue)'};background:${isGoalInvestment(inv)?'rgba(74,222,128,.12)':'rgba(96,165,250,.12)'}">${icon(isGoalInvestment(inv)?'target':'trend',23)}</div>
       <div class="inv-info">
-        <div class="inv-name">${inv.name}</div>
-        <div class="inv-sub">${inv.type} · Total ${fmtS(inv.invested)} · Month ${fmtS(monthTotal)}${inv.symbol?' · '+inv.symbol:''}${inv.units?' · '+inv.units+' units':''}</div>
+        <div class="inv-name">${escapeHtml(inv.name)}</div>
+        <div class="inv-sub">${escapeHtml(inv.type||'Investment')}</div>
       </div>
-      <div class="inv-right">
-        <div class="inv-val">${fmtS(inv.current)}</div>
-        <div class="inv-gain ${g>=0?'pos':'neg'}">${g>=0?'+':''}${fmt(g)} (${gp2.toFixed(1)}%)</div>
+      <div class="inv-main-value">
+        <div class="inv-val">${fmt(inv.current)}</div>
+        <div class="inv-gain ${g>=0?'pos':'neg'}">${g>=0?'+':''}${gp2.toFixed(1)}%</div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px">
-        <button class="edit-badge" onclick="openInvUpdate(${inv.id})">value</button>
-        <button class="edit-badge" onclick="openInvModal(${inv.id})" style="background:rgba(74,222,128,.12);color:var(--green)">+ capital</button>
-        <button class="del-btn" onclick="delInv(${inv.id})">×</button>
-      </div>
+      <button class="inv-menu-btn" onclick="openInvDetails(${inv.id})" aria-label="Investment details">⋯</button>
     </div>`;
   }).join('');
   document.getElementById('invest-list').innerHTML=html||`<div class="empty"><div class="empty-icon">${icon('trend',28)}</div><p>No investments yet.<br>Add your portfolio.</p></div>`;
 }
+function openInvDetails(id){
+  const d=loadData();
+  const inv=d.investments.find(i=>i.id===id);
+  if(!inv)return;
+  const g=cents(inv.current-inv.invested);
+  const gp2=inv.invested>0?g/inv.invested*100:0;
+  const monthTotal=(inv.contributions||[]).filter(c=>{const cd=new Date(c.date);return cd.getMonth()===now.getMonth()&&cd.getFullYear()===now.getFullYear()}).reduce((s,c)=>s+c.amount,0);
+  document.getElementById('inv-details-id').value=id;
+  document.getElementById('inv-details-title').childNodes[0].textContent=inv.name+' ';
+  document.getElementById('inv-details-current').textContent=fmt(inv.current);
+  const gainEl=document.getElementById('inv-details-gain');
+  gainEl.textContent=`${g>=0?'+':''}${fmt(g)} · ${g>=0?'+':''}${gp2.toFixed(1)}%`;
+  gainEl.className='inv-detail-gain '+(g>=0?'pos':'neg');
+  document.getElementById('inv-details-type').textContent=inv.type||'Investment';
+  document.getElementById('inv-details-invested').textContent=fmt(inv.invested);
+  document.getElementById('inv-details-month').textContent=fmt(monthTotal);
+  document.getElementById('inv-details-return').textContent=(g>=0?'+':'')+gp2.toFixed(1)+'%';
+  openModal('modal-inv-details');
+}
+function buyMoreFromDetails(){
+  const id=document.getElementById('inv-details-id').value;
+  closeModal('modal-inv-details');
+  openInvModal(Number(id));
+}
+function updateValueFromDetails(){
+  const id=document.getElementById('inv-details-id').value;
+  closeModal('modal-inv-details');
+  openInvUpdate(Number(id));
+}
+function deleteInvFromDetails(){
+  const id=Number(document.getElementById('inv-details-id').value);
+  closeModal('modal-inv-details');
+  delInv(id);
+}
+
 function delInv(id){const d=loadData();d.investments=d.investments.filter(i=>i.id!==id);saveData(d);showToast('Removed');renderAll()}
 
 
@@ -1696,46 +1787,8 @@ function selectCalendarDay(day){selectedCalendarDay=day;renderSpendingCalendar()
 
 /* ── BACKUP ── */
 
-function loadMarketApiKey(){return localStorage.getItem('trackr_market_api_key')||''}
-function saveMarketApiKey(){
-  const el=document.getElementById('market-api-key');
-  const key=(el?.value||'').trim();
-  if(!key){showToast('Add an API key');return}
-  localStorage.setItem('trackr_market_api_key',key);
-  showToast('✓ API key saved');
-}
-function hydrateSettings(){
-  const el=document.getElementById('market-api-key');
-  if(el)el.value=loadMarketApiKey();
-}
-async function refreshMarketPrices(){
-  const key=loadMarketApiKey();
-  if(!key){showToast('Add an API key in Settings');showPage('definicoes');hydrateSettings();return}
-  const d=loadData();
-  const tracked=(d.investments||[]).filter(inv=>inv.symbol && Number(inv.units)>0);
-  if(!tracked.length){showToast('Add a symbol and units first');return}
-  let updated=0;
-  for(const inv of tracked){
-    try{
-      const url=`https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(inv.symbol)}&apikey=${encodeURIComponent(key)}`;
-      const res=await fetch(url);
-      const data=await res.json();
-      const quote=data['Global Quote']||{};
-      const price=Number(quote['05. price']||quote['05. Price']);
-      if(Number.isFinite(price)&&price>0){
-        inv.marketPrice=cents(price);
-        inv.current=cents(price*Number(inv.units));
-        inv.lastPriceUpdate=new Date().toISOString();
-        updated++;
-      }
-    }catch(e){console.warn('Price update failed',inv.symbol,e)}
-  }
-  saveData(d);renderAll();
-  showToast(updated?`✓ Updated ${updated} price${updated===1?'':'s'}`:'No prices updated');
-}
-
-function exportData(){const data=loadData();const payload=JSON.stringify({version:'trackr_v19',exportedAt:new Date().toISOString(),data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('✓ Backup exported');}
-function importData(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const data=parsed.data||parsed;if(!data||!Array.isArray(data.expenses)||!Array.isArray(data.investments))throw new Error('invalid');saveData(data);event.target.value='';showToast('✓ Data importados');updateSalaryBadge();renderAll();renderFixedCosts();renderGoals();}catch(e){showToast('Invalid file')}};reader.readAsText(file);}
+function exportData(){const data=loadData();const payload=JSON.stringify({version:'trackr_v21',exportedAt:new Date().toISOString(),data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('✓ Backup exported');}
+function importData(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const data=parsed.data||parsed;if(!data||!Array.isArray(data.expenses)||!Array.isArray(data.investments))throw new Error('invalid');saveData(data);event.target.value='';showToast('✓ Data imported');updateSalaryBadge();renderAll();renderFixedCosts();renderGoals();}catch(e){showToast('Invalid file')}};reader.readAsText(file);}
 
 /* ── INIT ── */
 updateSalaryBadge();
