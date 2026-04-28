@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f6f4ec">
 <title>Trackr</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
@@ -191,8 +190,29 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 .prog-track{height:10px;background:#ece7db;border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1),background .5s}
 
-/* CHART */
-.chart-wrap{position:relative;height:210px;margin:4px 0 8px}
+/* CHARTS - CSS only for reliable iPhone/PWA rendering */
+.chart-wrap{position:relative;margin:4px 0 8px}
+.donut-card{display:grid;grid-template-columns:142px 1fr;align-items:center;gap:16px;min-height:160px}
+.donut{width:142px;height:142px;border-radius:50%;position:relative;background:var(--surface2);box-shadow:inset 0 0 0 1px var(--border), 0 12px 26px rgba(41,45,80,.06)}
+.donut::after{content:'';position:absolute;inset:28px;border-radius:50%;background:var(--surface);box-shadow:inset 0 0 0 1px var(--border)}
+.donut-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:1;text-align:center;pointer-events:none}
+.donut-center strong{font-size:17px;font-weight:950;letter-spacing:-.5px;color:var(--text)}
+.donut-center span{font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+.chart-legend{display:flex;flex-direction:column;gap:9px;min-width:0}
+.legend-row{display:grid;grid-template-columns:10px minmax(0,1fr) auto;align-items:center;gap:9px;font-size:12px}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.legend-name{color:var(--text);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend-value{color:var(--muted);font-weight:900;white-space:nowrap}
+.bar-chart{height:190px;display:flex;align-items:flex-end;gap:10px;padding:12px 4px 4px;border-radius:22px;background:linear-gradient(180deg,rgba(123,118,199,.08),rgba(123,118,199,.02))}
+.bar-col{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px;height:100%}
+.bar-track{width:100%;height:140px;border-radius:999px;background:var(--surface2);display:flex;align-items:flex-end;overflow:hidden;border:1px solid var(--border)}
+.bar-fill{width:100%;min-height:8px;border-radius:999px 999px 0 0;background:linear-gradient(180deg,var(--accent2),var(--accent));transition:height .55s var(--ease)}
+.bar-label{font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase}
+.bar-value{font-size:10px;color:var(--text);font-weight:900;white-space:nowrap;transform:translateY(1px)}
+.chart-empty{min-height:160px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:13px;font-weight:800;background:var(--surface2);border-radius:22px;border:1px dashed var(--border)}
+[data-theme="dark"] .donut::after{background:var(--surface)}
+[data-theme="dark"] .bar-chart{background:linear-gradient(180deg,rgba(140,123,255,.13),rgba(140,123,255,.04))}
+@media (max-width:370px){.donut-card{grid-template-columns:1fr}.donut{margin:0 auto}.chart-legend{gap:7px}.bar-chart{gap:7px}.bar-value{display:none}}
 
 /* EMPTY */
 .empty{text-align:center;padding:36px 20px;color:var(--muted)}
@@ -230,7 +250,6 @@ body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:env(safe-ar
 .edit-badge{font-size:11px;color:var(--accent);font-weight:800;cursor:pointer;padding:4px 8px;background:#f2f0ff;border-radius:10px;border:none;margin-left:4px;transition:background .12s,transform .12s}
 .edit-badge:active{background:#e9e5ff;transform:scale(.97)}
 
-canvas{border-radius:18px}
 
 .quick-manage{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:18px}
 .quick-manage-info{font-size:12px;color:var(--muted);font-weight:700;line-height:1.35}
@@ -449,26 +468,26 @@ canvas{border-radius:18px}
       </div>
       <div class="quick-actions">
         <button class="action-card" onclick="openGoalsManager()"><div class="action-card-title"><span class="action-ico" data-icon="target"></span>Goals</div><span>Savings goals</span></button>
-        <button class="action-card" onclick="openFixedManager()"><div class="action-card-title"><span class="action-ico" data-icon="settings"></span>Fixed costs</div><span>Mensais recorrentes</span></button>
+        <button class="action-card" onclick="openFixedManager()"><div class="action-card-title"><span class="action-ico" data-icon="settings"></span>Fixed costs</div><span>Recurring monthly</span></button>
       </div>
       <div class="kpi-grid">
         <div class="kpi"><div class="kpi-label">Expenses</div><div class="kpi-value red" id="res-despesas">0 €</div></div>
-        <div class="kpi"><div class="kpi-label">Invest./Savings month</div><div class="kpi-value blue" id="res-investido">0 €</div></div>
+        <div class="kpi"><div class="kpi-label">Invested this month</div><div class="kpi-value blue" id="res-investido">0 €</div></div>
         <div class="kpi"><div class="kpi-label">Fixed</div><div class="kpi-value yellow" id="res-fixos">0 €</div></div>
         <div class="kpi"><div class="kpi-label">Variable</div><div class="kpi-value orange" id="res-vars">0 €</div></div>
       </div>
       <div class="card" id="res-sal-card" style="display:none">
         <div class="card-title">Estimated balance</div>
         <div style="font-size:28px;font-weight:900;letter-spacing:-1px" id="res-saldo">0 €</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Income − expenses − investments/savings this month</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Income − expenses − money invested this month</div>
       </div>
       <div class="card">
-        <div class="card-title">Expenses por categoria</div>
-        <div class="chart-wrap"><canvas id="pie-chart"></canvas></div>
+        <div class="card-title">Spending by category</div>
+        <div class="chart-wrap" id="category-chart"></div>
       </div>
       <div class="card">
         <div class="card-title">Last 6 months</div>
-        <div class="chart-wrap"><canvas id="bar-chart"></canvas></div>
+        <div class="chart-wrap" id="months-chart"></div>
       </div>
     </div>
 
@@ -477,11 +496,11 @@ canvas{border-radius:18px}
       <div class="card">
         <div class="card-title">Settings</div>
         <div style="font-size:30px;font-weight:900;letter-spacing:-1px;margin-bottom:6px">App settings</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6">Monthly plan, data and preferences live here.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6">Monthly plan, backups and preferences live here.</div>
       </div>
       <div class="card">
         <div class="card-title">Monthly plan</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Set where your income goes every month.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Set a simple monthly split for your income.</div>
         <div class="budget-stacked" id="budget-stacked"></div>
         <div class="budget-section" id="budget-sliders"></div>
         <div class="budget-total-warn" id="budget-warn"></div>
@@ -782,7 +801,7 @@ const BUDGET_CATS=[
 let selectedCat=null, currentPage='despesas';
 let resumoMonth=new Date().getMonth(), resumoYear=new Date().getFullYear();
 let calendarMonth=new Date().getMonth(), calendarYear=new Date().getFullYear(), selectedCalendarDay=null;
-let pieChart=null, barChart=null;
+
 const MAX_AMOUNT=10000000;
 function isOverLimit(v){return Number.isFinite(Number(v)) && Math.abs(Number(v))>MAX_AMOUNT}
 function moneyLimitMsg(){showToast('Maximum value is '+fmt(MAX_AMOUNT))}
@@ -1309,7 +1328,7 @@ function syncFixedBudget(d){
 }
 function syncFixedBudgetFromUI(){
   const d=loadData();
-  if(!syncFixedBudget(d)){showToast('Define primeiro o ordenado');return}
+  if(!syncFixedBudget(d)){showToast('Set your income first');return}
   saveData(d);showToast('✓ Fixed percentage updated');renderAll();
 }
 function saveFixedCost(){
@@ -1330,14 +1349,14 @@ function saveFixedCost(){
   syncFixedBudget(d);
   saveData(d);
   closeModal('modal-fixed-cost');
-  showToast('✓ Custo fixo guardado');
+  showToast('✓ Fixed cost saved');
   renderAll();
 }
 function delFixedCost(id){
   const d=loadData();
   d.fixedCosts=(d.fixedCosts||[]).filter(f=>f.id!==id);
   syncFixedBudget(d);
-  saveData(d);showToast('Custo fixo removido');renderAll();
+  saveData(d);showToast('Fixed cost removed');renderAll();
 }
 function toggleFixedPaid(id){
   const d=loadData();
@@ -1495,7 +1514,7 @@ function saveGoal(){
   const current=parseAmt(document.getElementById('goal-current').value)||0;
   const goalIcon=document.getElementById('goal-icon').value;
   if(!name){showToast('Add a name');return}
-  if(!target||target<=0){showToast('Goal inválido');return}
+  if(!target||target<=0){showToast('Invalid goal');return}
   const d=loadData();
   if(!d.goals)d.goals=[];
   if(!d.investments)d.investments=[];
@@ -1518,7 +1537,7 @@ function saveGoal(){
     }
     d.goals.push({id:Date.now()+1,name,target,current:inv.current||0,icon:goalIcon,date:new Date().toISOString(),linkedInvestmentId:inv.id});
   }
-  saveData(d);closeModal('modal-goal');showToast('✓ Goal guardado');renderAll();
+  saveData(d);closeModal('modal-goal');showToast('✓ Goal saved');renderAll();
 }
 function openGoalAdd(id){
   const d=loadData();const g=(d.goals||[]).find(x=>x.id===id);
@@ -1558,7 +1577,7 @@ function delGoal(id){
     if(inv)inv.type='Other';
   }
   d.goals=(d.goals||[]).filter(g=>g.id!==id);
-  saveData(d);showToast('Goal removido');renderAll();
+  saveData(d);showToast('Goal removed');renderAll();
 }
 function goalCardHtml(g){
   const pct=g.target>0?Math.min(100,Math.round((g.current||0)/g.target*100)):0;
@@ -1632,37 +1651,45 @@ function renderSummary(){
     el.textContent=fmt(saldo);el.style.color=saldo>=0?'var(--green)':'var(--red)';
   } else salCard.style.display='none';
 
-  // PIE
+  // CATEGORY CHART (CSS only, reliable on iPhone/local PWA)
   const byCat={};expenses.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amount});
-  const catIds=Object.keys(byCat);
-  if(pieChart)pieChart.destroy();
-  const pc=document.getElementById('pie-chart').getContext('2d');
-  if(catIds.length>0){
-    pieChart=new Chart(pc,{type:'doughnut',
-      data:{labels:catIds.map(id=>(CATS.find(c=>c.id===id)||{label:'Other'}).label),
-        datasets:[{data:catIds.map(id=>+byCat[id].toFixed(2)),
-          backgroundColor:catIds.map(id=>(CATS.find(c=>c.id===id)||{color:'#6b7280'}).color),
-          borderWidth:0,hoverOffset:6}]},
-      options:{animation:{duration:650,easing:'easeOutQuart'},
-        plugins:{legend:{position:'bottom',labels:{color:'#6e6a94',font:{size:11},padding:12}}},
-        cutout:'62%',responsive:true,maintainAspectRatio:false}});
-  } else {
-    pc.clearRect(0,0,pc.canvas.width,pc.canvas.height);
-    pc.fillStyle='#6e6a94';pc.font='13px sans-serif';pc.textAlign='center';
-    pc.fillText('No data for this month',pc.canvas.width/2,100);
+  const catEntries=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  const categoryChart=document.getElementById('category-chart');
+  if(catEntries.length>0){
+    let cursor=0;
+    const gradientParts=catEntries.map(([id,amt])=>{
+      const c=CATS.find(x=>x.id===id)||{color:'#6b7280'};
+      const start=cursor;
+      const end=cursor+(amt/total*100);
+      cursor=end;
+      return `${c.color} ${start.toFixed(2)}% ${end.toFixed(2)}%`;
+    });
+    const topLegend=catEntries.slice(0,5).map(([id,amt])=>{
+      const c=CATS.find(x=>x.id===id)||{label:'Other',color:'#6b7280'};
+      const pct=total>0?Math.round((amt/total)*100):0;
+      return `<div class="legend-row"><span class="legend-dot" style="background:${c.color}"></span><span class="legend-name">${c.label}</span><span class="legend-value">${fmt(amt)} · ${pct}%</span></div>`;
+    }).join('');
+    categoryChart.innerHTML=`
+      <div class="donut-card">
+        <div class="donut" style="background:conic-gradient(${gradientParts.join(',')})">
+          <div class="donut-center"><strong>${fmt(total)}</strong><span>spent</span></div>
+        </div>
+        <div class="chart-legend">${topLegend}</div>
+      </div>`;
+  }else{
+    categoryChart.innerHTML='<div class="chart-empty">No spending yet for this month.</div>';
   }
 
-  // BAR
+  // 6 MONTH CHART (CSS only)
   const m6=[],d6=[];
-  for(let i=5;i>=0;i--){let m=resumoMonth-i,y=resumoYear;if(m<0){m+=12;y--;}m6.push(MN[m]);d6.push(+getMonthExp(m,y).reduce((s,e)=>s+e.amount,0).toFixed(2));}
-  if(barChart)barChart.destroy();
-  const bc=document.getElementById('bar-chart').getContext('2d');
-  barChart=new Chart(bc,{type:'bar',
-    data:{labels:m6,datasets:[{data:d6,backgroundColor:'rgba(124,106,247,.75)',borderRadius:10,borderSkipped:false}]},
-    options:{animation:{duration:650,easing:'easeOutQuart'},plugins:{legend:{display:false}},
-      scales:{x:{grid:{display:false},ticks:{color:'#6e6a94',font:{size:11}}},
-        y:{grid:{color:'rgba(42,42,62,.8)'},ticks:{color:'#6e6a94',font:{size:11},callback:v=>v+'€'}}},
-      responsive:true,maintainAspectRatio:false}});
+  for(let i=5;i>=0;i--){let m=resumoMonth-i,y=resumoYear;if(m<0){m+=12;y--;}m6.push(MN[m]);d6.push(cents(getMonthExp(m,y).reduce((s,e)=>s+e.amount,0)));}
+  const monthsChart=document.getElementById('months-chart');
+  const maxVal=Math.max(...d6,1);
+  monthsChart.innerHTML=`<div class="bar-chart">${m6.map((label,i)=>{
+    const val=d6[i];
+    const h=Math.max(7,Math.round((val/maxVal)*100));
+    return `<div class="bar-col"><div class="bar-value">${val?fmt(val):''}</div><div class="bar-track"><div class="bar-fill" style="height:${val?h:0}%"></div></div><div class="bar-label">${label}</div></div>`;
+  }).join('')}</div>`;
 }
 
 /* ── PLANO ── */
