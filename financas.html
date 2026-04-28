@@ -5,162 +5,229 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a0a12">
+<meta name="theme-color" content="#f6f4ec">
 <title>Finanças</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0a0a12;--surface:#14141f;--surface2:#1e1e2d;--surface3:#252538;--border:#2a2a3e;
-  --accent:#7c6af7;--accent2:#a78bfa;--green:#4ade80;--red:#f87171;
-  --yellow:#fbbf24;--blue:#60a5fa;--teal:#2dd4bf;--orange:#fb923c;
-  --text:#f0effe;--muted:#6e6a94;--font:-apple-system,'SF Pro Display',sans-serif;
-  --ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
+  --bg:#f6f4ec;
+  --bg2:#efebe0;
+  --surface:#ffffff;
+  --surface2:#faf8f2;
+  --surface3:#f3efe4;
+  --border:#ece7d9;
+  --accent:#5752a3;
+  --accent2:#7b76c7;
+  --green:#49c28b;
+  --red:#ef7d73;
+  --yellow:#f2cf63;
+  --blue:#78aef6;
+  --teal:#53d1bf;
+  --orange:#f5a464;
+  --pink:#ef8db5;
+  --text:#22233b;
+  --muted:#8d8ca1;
+  --font:-apple-system,BlinkMacSystemFont,'SF Pro Display','Inter',sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --shadow:0 14px 32px rgba(41,45,80,.08);
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden}
-.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto}
+
+[data-theme="dark"]{
+  --bg:#0f1020;--bg2:#17182a;--surface:#202135;--surface2:#292a42;--surface3:#333552;--border:#3c3d58;
+  --accent:#8c7bff;--accent2:#b7a8ff;--green:#4ade80;--red:#fb7185;--yellow:#fbbf24;--blue:#60a5fa;--teal:#2dd4bf;--orange:#fb923c;--pink:#f472b6;
+  --text:#f4f2ff;--muted:#9b98bd;--shadow:0 14px 32px rgba(0,0,0,.24);
+}
+[data-theme="dark"] .card,[data-theme="dark"] .kpi,[data-theme="dark"] .salary-badge,[data-theme="dark"] .month-nav,[data-theme="dark"] .tabs{background:rgba(32,33,53,.82);border-color:rgba(255,255,255,.08)}
+[data-theme="dark"] .modal{background:#202135}
+[data-theme="dark"] .tab.active{background:#2b2c45;color:var(--accent2)}
+[data-theme="dark"] .field input,[data-theme="dark"] .field select{background:#292a42;color:var(--text);border-color:#3c3d58}
+[data-theme="dark"] .field select option{background:#292a42}
+[data-theme="dark"] .expense-item,[data-theme="dark"] .inv-item{border-bottom-color:#34364f}
+[data-theme="dark"] .prog-track,[data-theme="dark"] .budget-slider::-webkit-slider-runnable-track{background:#3c3d58}
+[data-theme="dark"] .budget-stacked{background:#292a42}
+html,body{height:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);font-family:var(--font);overflow:hidden}
+body{padding:0}
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:430px;margin:0 auto;position:relative;background:transparent}
 
 /* TOPBAR */
-.topbar{padding:54px 20px 10px;flex-shrink:0}
+.topbar{padding:56px 20px 8px;flex-shrink:0}
 .topbar-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.topbar h1{font-size:26px;font-weight:800;letter-spacing:-.8px}
-.topbar .date{font-size:12px;color:var(--muted);margin-top:3px}
-.salary-badge{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:6px 12px;cursor:pointer;text-align:right;transition:background .2s;flex-shrink:0}
-.salary-badge:active{background:var(--surface3)}
-.sal-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.sal-value{font-size:15px;font-weight:800;color:var(--green);letter-spacing:-.5px}
+.topbar h1{font-size:30px;font-weight:900;letter-spacing:-1.2px;line-height:1}
+.topbar .date{font-size:13px;color:var(--muted);margin-top:8px;font-weight:600}
+.salary-badge{background:rgba(255,255,255,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.7);border-radius:18px;padding:10px 14px;cursor:pointer;text-align:right;transition:transform .2s var(--spring),background .2s;flex-shrink:0;min-width:88px}
+.salary-badge:active{transform:scale(.97)}
+.sal-label{font-size:10px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.8px}
+.sal-value{font-size:16px;font-weight:900;color:var(--green);letter-spacing:-.5px;margin-top:2px}
 
 /* TABS */
-.tabs{display:flex;padding:10px 20px 8px;gap:6px;flex-shrink:0}
-.tab{flex:1;padding:9px 4px;border-radius:12px;border:none;background:var(--surface);color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:background .2s,color .2s,transform .15s var(--spring);letter-spacing:.2px}
-.tab.active{background:var(--accent);color:#fff}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;width:calc(100% - 28px);max-width:402px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px;background:rgba(255,255,255,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.85);border-radius:28px;box-shadow:0 12px 32px rgba(41,45,80,.13);z-index:20}
+.tab{min-height:56px;padding:8px 4px;border-radius:18px;border:none;background:transparent;color:var(--muted);font-size:11px;font-weight:800;cursor:pointer;transition:background .22s,color .22s,transform .15s var(--spring),box-shadow .22s;letter-spacing:.1px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.tab::before{display:block;font-size:18px;line-height:1}
+.tab:nth-child(1)::before{content:'💸'}
+.tab:nth-child(2)::before{content:'📈'}
+.tab:nth-child(3)::before{content:'📊'}
+.tab:nth-child(4)::before{content:'🎯'}
+.tab.active{background:#fff;color:var(--accent);box-shadow:0 8px 18px rgba(87,82,163,.12)}
 .tab:active{transform:scale(.93)}
 
 /* PAGES */
 .pages{flex:1;overflow:hidden;position:relative}
-.page{position:absolute;inset:0;overflow-y:auto;padding:8px 20px 130px;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
+.page{position:absolute;inset:0;overflow-y:auto;padding:10px 20px 134px;opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
 .page.active{opacity:1;pointer-events:all;transform:translateY(0)}
 .page::-webkit-scrollbar{display:none}
 
 /* CARDS */
-.card{background:var(--surface);border-radius:20px;padding:18px;margin-bottom:12px;border:1px solid var(--border)}
-.card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:14px}
+.card{background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:28px;padding:18px;margin-bottom:14px;border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow)}
+.card-title{font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:14px}
 
 /* FAB */
-.fab{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);width:calc(100% - 40px);max-width:390px;background:var(--accent);color:#fff;border:none;border-radius:18px;padding:17px;font-size:16px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-.3px;transition:transform .2s var(--spring),opacity .15s;z-index:10;box-shadow:0 8px 32px rgba(124,106,247,.3)}
-.fab:active{transform:translateX(-50%) scale(.96);opacity:.9}
+.fab{position:fixed;bottom:96px;right:18px;left:auto;transform:none;width:58px;height:58px;line-height:58px;max-width:none;background:var(--accent);color:#fff;border:none;border-radius:50%;padding:0;font-size:32px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:0;letter-spacing:0;transition:transform .2s var(--spring),opacity .15s;z-index:21;box-shadow:0 14px 30px rgba(87,82,163,.3)}
+.fab:active{transform:scale(.94);opacity:.92}
 
 /* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:100;display:flex;align-items:flex-end;pointer-events:none;transition:background .3s var(--ease)}
-.modal-overlay.open{background:rgba(0,0,0,.75);pointer-events:all}
-.modal{background:var(--surface);border-radius:28px 28px 0 0;padding:6px 24px 52px;width:100%;max-width:430px;margin:0 auto;transform:translateY(100%);transition:transform .38s cubic-bezier(.32,0,.67,0);max-height:93dvh;overflow-y:auto}
+.modal-overlay{position:fixed;inset:0;background:rgba(17,18,31,0);z-index:100;display:flex;align-items:flex-end;pointer-events:none;transition:background .3s var(--ease)}
+.modal-overlay.open{background:rgba(17,18,31,.42);pointer-events:all}
+.modal{background:#fff;border-radius:30px 30px 0 0;padding:8px 24px 52px;width:100%;max-width:430px;margin:0 auto;transform:translateY(100%);transition:transform .38s cubic-bezier(.32,0,.67,0);max-height:93dvh;overflow-y:auto;box-shadow:0 -12px 40px rgba(41,45,80,.12)}
 .modal-overlay.open .modal{transform:translateY(0);transition:transform .4s cubic-bezier(.16,1,.3,1)}
 .modal::-webkit-scrollbar{display:none}
-.modal-handle{width:40px;height:4px;background:var(--border);border-radius:99px;margin:12px auto 20px}
-.modal h2{font-size:20px;font-weight:800;margin-bottom:20px;letter-spacing:-.4px}
-.modal-close{float:right;background:var(--surface2);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;font-size:16px;cursor:pointer}
+.modal-handle{width:42px;height:5px;background:#ded9c9;border-radius:99px;margin:12px auto 20px}
+.modal h2{font-size:22px;font-weight:900;margin-bottom:20px;letter-spacing:-.6px;color:var(--text)}
+.modal-close{float:right;background:var(--surface2);border:none;color:var(--muted);width:34px;height:34px;border-radius:50%;font-size:16px;cursor:pointer}
 
 /* FORM */
 .field{margin-bottom:16px}
-.field label{display:block;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.6px}
-.field input,.field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:14px;padding:14px 16px;color:var(--text);font-size:16px;font-family:var(--font);outline:none;appearance:none;transition:border-color .2s,background .2s}
-.field input:focus,.field select:focus{border-color:var(--accent);background:var(--surface3)}
-.field select option{background:#1e1e2d}
+.field label{display:block;font-size:11px;font-weight:800;color:var(--muted);margin-bottom:7px;text-transform:uppercase;letter-spacing:.7px}
+.field input,.field select{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:18px;padding:15px 16px;color:var(--text);font-size:16px;font-family:var(--font);outline:none;appearance:none;transition:border-color .2s,background .2s,box-shadow .2s}
+.field input:focus,.field select:focus{border-color:#cfc7ff;background:#fff;box-shadow:0 0 0 4px rgba(123,118,199,.12)}
+.field select option{background:#fff}
 .amount-wrap{position:relative}
-.amount-wrap input{font-size:34px!important;font-weight:900!important;letter-spacing:-2px!important;text-align:center!important;padding:18px 48px 18px 16px!important}
-.amount-wrap .cur{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted);font-weight:600;pointer-events:none}
+.amount-wrap input{font-size:34px!important;font-weight:900!important;letter-spacing:-2px!important;text-align:center!important;padding:20px 48px 20px 16px!important}
+.amount-wrap .cur{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--muted);font-weight:700;pointer-events:none}
 
 /* CATS */
-.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
-.cat-btn{background:var(--surface2);border:1.5px solid transparent;border-radius:14px;padding:10px 3px;cursor:pointer;text-align:center;transition:border-color .16s,background .16s,transform .13s var(--spring)}
-.cat-btn:active{transform:scale(.88)}
-.cat-btn.sel{border-color:var(--accent);background:rgba(124,106,247,.18)}
-.cat-icon{font-size:20px;display:block;margin-bottom:3px}
-.cat-label{font-size:9px;color:var(--muted);font-weight:700;line-height:1.2}
-.cat-btn.sel .cat-label{color:var(--accent2)}
+.cats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.cat-btn{background:var(--surface2);border:1px solid transparent;border-radius:18px;padding:12px 4px;cursor:pointer;text-align:center;transition:border-color .16s,background .16s,transform .13s var(--spring),box-shadow .16s}
+.cat-btn:active{transform:scale(.94)}
+.cat-btn.sel{border-color:#d7d2ff;background:#f4f2ff;box-shadow:0 8px 18px rgba(87,82,163,.08)}
+.cat-icon{font-size:22px;display:block;margin-bottom:5px}
+.cat-label{font-size:10px;color:var(--muted);font-weight:800;line-height:1.2}
+.cat-btn.sel .cat-label{color:var(--accent)}
 
 /* BTN */
-.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:16px;padding:16px;font-size:17px;font-weight:800;cursor:pointer;transition:transform .15s var(--spring),opacity .15s;margin-top:4px}
-.btn-primary:active{transform:scale(.97);opacity:.88}
-.btn-secondary{width:100%;background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:16px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s,transform .13s var(--spring);margin-top:8px}
-.btn-secondary:active{background:var(--surface3);transform:scale(.97)}
+.btn-primary{width:100%;background:var(--accent);color:#fff;border:none;border-radius:18px;padding:17px;font-size:17px;font-weight:900;cursor:pointer;transition:transform .15s var(--spring),opacity .15s,box-shadow .2s;margin-top:4px;box-shadow:0 10px 24px rgba(87,82,163,.25)}
+.btn-primary:active{transform:scale(.98);opacity:.9}
+.btn-secondary{width:100%;background:var(--surface2);color:var(--text);border:1.5px solid var(--border);border-radius:18px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s,transform .13s var(--spring);margin-top:8px}
+.btn-secondary:active{background:var(--surface3);transform:scale(.98)}
 
-/* EXPENSE ITEMS */
-.expense-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);animation:fadeSlide .22s var(--ease) both}
+/* LIST ITEMS */
+.expense-item,.inv-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0ebdf;animation:fadeSlide .22s var(--ease) both}
 @keyframes fadeSlide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.expense-item:last-child{border-bottom:none}
-.exp-icon{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0}
-.exp-info{flex:1;min-width:0}
-.exp-name{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.exp-meta{font-size:11px;color:var(--muted);margin-top:2px}
-.exp-right{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.exp-amount{font-size:15px;font-weight:800;color:var(--red)}
-.del-btn{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;opacity:.35;padding:2px 4px;transition:opacity .12s,color .12s;line-height:1}
+.expense-item:last-child,.inv-item:last-child{border-bottom:none}
+.exp-icon,.inv-ticker{width:52px;height:52px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.65)}
+.exp-info,.inv-info{flex:1;min-width:0}
+.exp-name,.inv-name{font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text)}
+.exp-meta,.inv-sub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:600}
+.exp-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.exp-amount{font-size:15px;font-weight:900;color:var(--red)}
+.inv-right{text-align:right;flex-shrink:0}
+.inv-val{font-size:16px;font-weight:900}
+.inv-gain{font-size:11px;margin-top:3px;font-weight:800}
+.pos{color:var(--green)}.neg{color:var(--red)}
+.del-btn{background:none;border:none;color:#bbb6cb;font-size:20px;cursor:pointer;opacity:.65;padding:2px 4px;transition:opacity .12s,color .12s;line-height:1}
 .del-btn:active{opacity:1;color:var(--red)}
 
 /* KPI */
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.kpi{background:var(--surface);border-radius:18px;padding:16px;border:1px solid var(--border)}
-.kpi-label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.kpi-value{font-size:20px;font-weight:800;margin-top:5px;letter-spacing:-.6px}
-.kpi-value.red{color:var(--red)}.kpi-value.green{color:var(--green)}.kpi-value.yellow{color:var(--yellow)}.kpi-value.blue{color:var(--blue)}.kpi-value.orange{color:var(--orange)}.kpi-value.teal{color:var(--teal)}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.kpi{background:rgba(255,255,255,.88);border-radius:24px;padding:16px;border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow)}
+.kpi:nth-child(1){background:linear-gradient(180deg,#edf5ff,#ffffff)}
+.kpi:nth-child(2){background:linear-gradient(180deg,#eefbf5,#ffffff)}
+.kpi:nth-child(3){background:linear-gradient(180deg,#fff4f2,#ffffff)}
+.kpi:nth-child(4){background:linear-gradient(180deg,#f7f4ff,#ffffff)}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.7px}
+.kpi-value{font-size:22px;font-weight:900;margin-top:7px;letter-spacing:-.8px;color:var(--text)}
+.kpi-value.red{color:var(--red)}.kpi-value.green{color:var(--green)}.kpi-value.yellow{color:#c9a132}.kpi-value.blue{color:var(--blue)}.kpi-value.orange{color:var(--orange)}.kpi-value.teal{color:var(--teal)}
 
-/* PROGRESS BAR */
-.prog-wrap{margin-top:12px}
-.prog-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;color:var(--muted);font-weight:600}
-.prog-row span:last-child{color:var(--text);font-weight:800}
-.prog-track{height:7px;background:var(--border);border-radius:99px;overflow:hidden}
+/* PROGRESS */
+.prog-wrap{margin-top:14px;background:var(--surface2);padding:12px 12px 10px;border-radius:18px}
+.prog-row{display:flex;justify-content:space-between;margin-bottom:7px;font-size:12px;color:var(--muted);font-weight:700}
+.prog-row span:last-child{color:var(--text);font-weight:900}
+.prog-track{height:10px;background:#ece7db;border-radius:99px;overflow:hidden}
 .prog-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1),background .5s}
 
-/* INVEST ITEMS */
-.inv-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);animation:fadeSlide .22s var(--ease) both}
-.inv-item:last-child{border-bottom:none}
-.inv-ticker{width:44px;height:44px;border-radius:14px;background:rgba(96,165,250,.12);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:var(--blue);flex-shrink:0;letter-spacing:-.3px;text-align:center;line-height:1.2;padding:2px}
-.inv-info{flex:1;min-width:0}
-.inv-name{font-size:14px;font-weight:700}
-.inv-sub{font-size:11px;color:var(--muted);margin-top:2px}
-.inv-right{text-align:right;flex-shrink:0}
-.inv-val{font-size:15px;font-weight:800}
-.inv-gain{font-size:11px;margin-top:2px;font-weight:700}
-.pos{color:var(--green)}.neg{color:var(--red)}
-
 /* CHART */
-.chart-wrap{position:relative;height:200px;margin:4px 0 8px}
+.chart-wrap{position:relative;height:210px;margin:4px 0 8px}
 
 /* EMPTY */
 .empty{text-align:center;padding:36px 20px;color:var(--muted)}
-.empty-icon{font-size:38px;margin-bottom:10px}
-.empty p{font-size:13px;line-height:1.7}
+.empty-icon{font-size:42px;margin-bottom:10px}
+.empty p{font-size:13px;line-height:1.7;font-weight:600}
 
 /* MONTH NAV */
-.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.month-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:11px;font-size:18px;cursor:pointer;transition:background .14s,transform .13s var(--spring)}
-.month-nav button:active{transform:scale(.9);background:var(--surface3)}
-.month-nav span{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.month-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;background:rgba(255,255,255,.75);border-radius:22px;padding:8px 10px;box-shadow:var(--shadow)}
+.month-nav button{background:var(--surface2);border:1px solid var(--border);color:var(--accent);width:40px;height:40px;border-radius:14px;font-size:18px;font-weight:900;cursor:pointer;transition:background .14s,transform .13s var(--spring)}
+.month-nav button:active{transform:scale(.92);background:#fff}
+.month-nav span{font-size:16px;font-weight:900;letter-spacing:-.3px}
 
 /* TOAST */
-.toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--surface3);border:1px solid var(--border);color:var(--text);padding:10px 20px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--spring);z-index:999;white-space:nowrap}
+.toast{position:fixed;bottom:160px;left:50%;transform:translateX(-50%) translateY(16px);background:#2c2f56;color:#fff;padding:12px 18px;border-radius:16px;font-size:14px;font-weight:700;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s var(--spring);z-index:999;white-space:nowrap;box-shadow:0 10px 24px rgba(44,47,86,.28)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* BUDGET SLIDERS */
+/* BUDGET */
 .budget-section{margin-bottom:16px}
 .budget-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .budget-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
 .budget-info{flex:1}
-.budget-name{font-size:13px;font-weight:700}
-.budget-pct{font-size:12px;color:var(--muted);margin-top:1px}
-.budget-val{font-size:13px;font-weight:800;text-align:right;flex-shrink:0;min-width:52px}
-.budget-slider{-webkit-appearance:none;appearance:none;width:100%;height:36px;background:none;cursor:pointer;padding:0}
-.budget-slider::-webkit-slider-runnable-track{height:6px;background:var(--border);border-radius:99px}
-.budget-slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);margin-top:-8px;border:3px solid var(--surface);transition:transform .15s var(--spring)}
-.budget-slider:active::-webkit-slider-thumb{transform:scale(1.2)}
-.budget-stacked{height:14px;background:var(--surface2);border-radius:99px;overflow:hidden;display:flex;margin:4px 0 16px;gap:2px}
-.budget-stacked-seg{height:100%;transition:width .5s var(--ease);border-radius:99px}
-.budget-total-warn{font-size:12px;text-align:center;color:var(--red);font-weight:700;margin-top:6px;min-height:18px}
+.budget-name{font-size:14px;font-weight:800}
+.budget-pct{font-size:12px;color:var(--muted);margin-top:1px;font-weight:600}
+.budget-val{font-size:14px;font-weight:900;text-align:right;flex-shrink:0;min-width:52px}
+.budget-slider{-webkit-appearance:none;appearance:none;width:100%;height:42px;background:none;cursor:pointer;padding:0}
+.budget-slider::-webkit-slider-runnable-track{height:8px;background:#ece7db;border-radius:99px}
+.budget-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:var(--accent);margin-top:-8px;border:4px solid #fff;box-shadow:0 4px 12px rgba(87,82,163,.28);transition:transform .15s var(--spring)}
+.budget-slider:active::-webkit-slider-thumb{transform:scale(1.12)}
+.budget-stacked{height:16px;background:var(--surface2);border-radius:99px;overflow:hidden;display:flex;margin:4px 0 16px;gap:3px;padding:2px}
+.budget-stacked-seg{height:100%;transition:width .35s var(--ease);border-radius:99px}
+.budget-total-warn{font-size:12px;text-align:center;color:var(--red);font-weight:800;margin-top:8px;min-height:18px}
 
-/* INVEST EDIT BADGE */
-.edit-badge{font-size:11px;color:var(--accent2);font-weight:700;cursor:pointer;padding:2px 8px;background:rgba(124,106,247,.15);border-radius:8px;border:none;margin-left:4px;transition:background .12s}
-.edit-badge:active{background:rgba(124,106,247,.3)}
+/* BADGES */
+.edit-badge{font-size:11px;color:var(--accent);font-weight:800;cursor:pointer;padding:4px 8px;background:#f2f0ff;border-radius:10px;border:none;margin-left:4px;transition:background .12s,transform .12s}
+.edit-badge:active{background:#e9e5ff;transform:scale(.97)}
+
+canvas{border-radius:18px}
+
+.quick-manage{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;padding:10px 12px;background:var(--surface2);border-radius:18px}
+.quick-manage-info{font-size:12px;color:var(--muted);font-weight:700;line-height:1.35}
+.quick-manage-info strong{display:block;color:var(--text);font-size:13px;margin-bottom:1px}
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.action-card{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow);border-radius:22px;padding:14px;border:none;color:var(--text);font-weight:900;text-align:left;cursor:pointer}
+.action-card span{display:block;color:var(--muted);font-size:11px;font-weight:800;margin-top:4px}
+[data-theme="dark"] .action-card{background:rgba(32,33,53,.82);border-color:rgba(255,255,255,.08)}
+.manager-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.manager-total{font-size:24px;font-weight:900;letter-spacing:-.8px}
+
+.theme-toggle{background:rgba(255,255,255,.72);border:1px solid rgba(255,255,255,.85);box-shadow:var(--shadow);color:var(--text);width:42px;height:42px;border-radius:16px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s var(--spring)}
+.theme-toggle:active{transform:scale(.95)}
+.top-actions{display:flex;gap:8px;align-items:flex-start}
+.fixed-actions,.goal-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.small-pill{border:none;border-radius:999px;background:var(--surface2);color:var(--accent);padding:9px 12px;font-size:12px;font-weight:900;cursor:pointer}
+.goal-card{background:var(--surface2);border-radius:20px;padding:14px;margin-bottom:10px}
+.goal-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.goal-title{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:900}
+.goal-emoji{width:38px;height:38px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 6px 14px rgba(41,45,80,.06)}
+[data-theme="dark"] .goal-emoji{background:#292a42}
+.goal-money{text-align:right;font-weight:900}
+.goal-sub{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+.goal-progress{height:9px;background:var(--border);border-radius:99px;overflow:hidden}
+.goal-progress>div{height:100%;border-radius:99px;background:var(--green);transition:width .5s var(--ease)}
+.fixed-cost-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.fixed-cost-item:last-child{border-bottom:none}
+.fixed-cost-name{font-size:14px;font-weight:900}
+.fixed-cost-meta{font-size:12px;color:var(--muted);font-weight:700;margin-top:2px}
+.fixed-cost-item.paid{opacity:.78}
+.fixed-pay-btn{border:none;border-radius:999px;padding:8px 10px;font-size:11px;font-weight:900;cursor:pointer;background:#eefbf5;color:var(--green);white-space:nowrap}
+.fixed-pay-btn.paid{background:#f0ecff;color:var(--accent)}
+.fixed-pay-btn:active{transform:scale(.97)}
 </style>
 </head>
 <body>
@@ -168,19 +235,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   <div class="topbar">
     <div class="topbar-row">
       <div>
-        <h1>Finanças 💳</h1>
+        <h1>Finanças</h1>
         <div class="date" id="today-date"></div>
       </div>
-      <div class="salary-badge" onclick="openModal('modal-salary')">
-        <div class="sal-label">Ordenado</div>
-        <div class="sal-value" id="salary-badge-val">— €</div>
+      <div class="top-actions">
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema">☀️</button>
+        <div class="salary-badge" onclick="openModal('modal-salary')">
+          <div class="sal-label">Ordenado</div>
+          <div class="sal-value" id="salary-badge-val">— €</div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="tabs">
     <button class="tab active" onclick="showPage('despesas')">Despesas</button>
-    <button class="tab" onclick="showPage('investimentos')">Investimentos</button>
+    <button class="tab" onclick="showPage('investimentos')">Invest.</button>
     <button class="tab" onclick="showPage('resumo')">Resumo</button>
     <button class="tab" onclick="showPage('plano')">Plano</button>
   </div>
@@ -200,6 +270,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
           <div class="prog-row"><span id="var-prog-label">despesas variáveis</span><span id="var-pct-text">0%</span></div>
           <div class="prog-track"><div class="prog-fill" id="var-bar" style="width:0%;background:var(--orange)"></div></div>
         </div>
+      </div>
+      <div class="quick-manage">
+        <div class="quick-manage-info">
+          <strong>Custos fixos mensais</strong>
+          <span id="fixed-cost-mini">0 € definidos</span>
+        </div>
+        <button class="small-pill" onclick="openFixedManager()">Gerir</button>
       </div>
       <div class="card">
         <div class="card-title">Por categoria</div>
@@ -237,6 +314,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <span id="resumo-month-label"></span>
         <button onclick="changeMonth(1)">›</button>
       </div>
+      <div class="quick-actions">
+        <button class="action-card" onclick="openGoalsManager()">🎯 Objetivos<span>Metas de poupança</span></button>
+        <button class="action-card" onclick="openFixedManager()">⚙️ Custos fixos<span>Mensais recorrentes</span></button>
+      </div>
       <div class="kpi-grid">
         <div class="kpi"><div class="kpi-label">Despesas</div><div class="kpi-value red" id="res-despesas">0 €</div></div>
         <div class="kpi"><div class="kpi-label">Inv./Poupança mês</div><div class="kpi-value blue" id="res-investido">0 €</div></div>
@@ -262,7 +343,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     <div class="page" id="page-plano">
       <div class="card">
         <div class="card-title">Distribuição do ordenado</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Arrasta os sliders para definir como queres dividir o teu ordenado. Quando mexes numa categoria, as outras ajustam-se automaticamente para manter o total em 100%.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Arrasta os sliders para definir como queres dividir o teu ordenado. Cada categoria é independente, mas o total nunca pode passar dos 100%.</div>
         <div class="budget-stacked" id="budget-stacked"></div>
         <div class="budget-section" id="budget-sliders"></div>
         <div class="budget-total-warn" id="budget-warn"></div>
@@ -274,7 +355,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
     </div>
   </div>
 
-  <button class="fab" id="fab-btn">+ Despesa</button>
+  <button class="fab" id="fab-btn">＋</button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -360,6 +441,81 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
   </div>
 </div>
 
+
+
+<!-- MODAL GERIR CUSTOS FIXOS -->
+<div class="modal-overlay" id="modal-fixed-manager" onclick="overlayClick(event,'modal-fixed-manager')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Custos fixos <button class="modal-close" onclick="closeModal('modal-fixed-manager')">✕</button></h2>
+    <div class="manager-header">
+      <div>
+        <div class="card-title" style="margin-bottom:4px">Total mensal</div>
+        <div class="manager-total" id="fixed-manager-total">0 €</div>
+      </div>
+      <button class="small-pill" onclick="openFixedCostModal()">+ custo</button>
+    </div>
+    <div id="fixed-cost-list"></div>
+    <button class="btn-secondary" onclick="syncFixedBudgetFromUI()">Ajustar % dos fixos no Plano</button>
+  </div>
+</div>
+
+<!-- MODAL GERIR OBJETIVOS -->
+<div class="modal-overlay" id="modal-goals-manager" onclick="overlayClick(event,'modal-goals-manager')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Objetivos <button class="modal-close" onclick="closeModal('modal-goals-manager')">✕</button></h2>
+    <div class="manager-header">
+      <div>
+        <div class="card-title" style="margin-bottom:4px">Total poupado</div>
+        <div class="manager-total" id="goals-total">0 €</div>
+        <div style="font-size:12px;color:var(--muted);font-weight:800" id="goals-count">0 objetivos ativos</div>
+      </div>
+      <button class="small-pill" onclick="openGoalModal()">+ objetivo</button>
+    </div>
+    <div id="goals-list"></div>
+  </div>
+</div>
+
+<!-- MODAL CUSTO FIXO -->
+<div class="modal-overlay" id="modal-fixed-cost" onclick="overlayClick(event,'modal-fixed-cost')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Custo fixo mensal <button class="modal-close" onclick="closeModal('modal-fixed-cost')">✕</button></h2>
+    <input type="hidden" id="fixed-id">
+    <div class="field"><label>Nome</label><input type="text" id="fixed-name" placeholder="ex: Renda, Ginásio, Netflix" autocomplete="off"></div>
+    <div class="field"><label>Valor mensal</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="fixed-amount" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
+    <div class="field"><label>Categoria</label><select id="fixed-cat"><option value="casa">Casa</option><option value="sub">Subscrições</option><option value="transporte">Transporte</option><option value="saude">Saúde</option><option value="outro">Outro</option></select></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Este custo aparece todos os meses na checklist. Só entra nas despesas quando marcares como pago.</div>
+    <button class="btn-primary" onclick="saveFixedCost()">Guardar custo fixo</button>
+  </div>
+</div>
+
+<!-- MODAL OBJETIVO -->
+<div class="modal-overlay" id="modal-goal" onclick="overlayClick(event,'modal-goal')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="goal-modal-title">Novo objetivo <button class="modal-close" onclick="closeModal('modal-goal')">✕</button></h2>
+    <input type="hidden" id="goal-id">
+    <div class="field"><label>Ícone</label><select id="goal-icon"><option value="✈️">✈️ Viagem</option><option value="🚗">🚗 Carro</option><option value="🏠">🏠 Casa</option><option value="🎁">🎁 Presente</option><option value="💻">💻 Tecnologia</option><option value="💰">💰 Outro</option></select></div>
+    <div class="field"><label>Nome do objetivo</label><input type="text" id="goal-name" placeholder="ex: Viagem a Bali, Novo carro" autocomplete="off"></div>
+    <div class="field"><label>Valor objetivo</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-target" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
+    <div class="field"><label>Valor já poupado</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-current" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
+    <button class="btn-primary" onclick="saveGoal()">Guardar objetivo</button>
+  </div>
+</div>
+
+<!-- MODAL ADICIONAR AO OBJETIVO -->
+<div class="modal-overlay" id="modal-goal-add" onclick="overlayClick(event,'modal-goal-add')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="goal-add-title">Adicionar poupança <button class="modal-close" onclick="closeModal('modal-goal-add')">✕</button></h2>
+    <input type="hidden" id="goal-add-id">
+    <div class="field"><label>Valor a adicionar</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-add-amount" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
+    <button class="btn-primary" onclick="addGoalSaving()">Adicionar</button>
+  </div>
+</div>
+
 <!-- MODAL SALARY -->
 <div class="modal-overlay" id="modal-salary" onclick="overlayClick(event,'modal-salary')">
   <div class="modal">
@@ -401,24 +557,24 @@ let pieChart=null, barChart=null;
 /* ── STORAGE ── */
 function loadData(){
   try{
-    // v4 guarda contribuições mensais dos investimentos, para o saldo do mês não descontar o portfólio inteiro.
-    const raw=localStorage.getItem('fin_v4')||localStorage.getItem('fin_v3')||'{"expenses":[],"investments":[],"salary":0,"budget":{"fixos":20,"variaveis":30,"invest":20,"poupanca":30}}';
+    const raw=localStorage.getItem('fin_v6')||localStorage.getItem('fin_v4')||localStorage.getItem('fin_v3')||'{"expenses":[],"investments":[],"salary":0,"budget":{"fixos":20,"variaveis":30,"invest":20,"poupanca":30},"goals":[],"fixedCosts":[],"fixedPaid":{}}';
     const d=JSON.parse(raw);
     if(!d.expenses)d.expenses=[];
     if(!d.investments)d.investments=[];
+    if(!d.goals)d.goals=[];
+    if(!d.fixedCosts)d.fixedCosts=[];
+    if(!d.fixedPaid)d.fixedPaid={};
     if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
     d.investments=d.investments.map(inv=>{
-      if(!inv.contributions){
-        inv.contributions=[{amount:inv.invested||0,date:inv.date||new Date().toISOString()}];
-      }
+      if(!inv.contributions){inv.contributions=[{amount:inv.invested||0,date:inv.date||new Date().toISOString()}];}
       if(!inv.date)inv.date=inv.contributions[0]?.date||new Date().toISOString();
       return inv;
     });
     return d;
   }
-  catch(e){return{expenses:[],investments:[],salary:0,budget:{fixos:20,variaveis:30,invest:20,poupanca:30}}}
+  catch(e){return{expenses:[],investments:[],salary:0,budget:{fixos:20,variaveis:30,invest:20,poupanca:30},goals:[],fixedCosts:[],fixedPaid:{}}}
 }
-function saveData(d){localStorage.setItem('fin_v4',JSON.stringify(d))}
+function saveData(d){localStorage.setItem('fin_v6',JSON.stringify(d))}
 
 /* ── PARSE / FORMAT ── */
 function parseAmt(s){if(!s)return NaN;return parseFloat(s.trim().replace(/\s/g,'').replace(',','.'))}
@@ -429,6 +585,22 @@ function fmtS(n){return n.toLocaleString('pt-PT',{minimumFractionDigits:0,maximu
 const now=new Date();
 document.getElementById('today-date').textContent=now.toLocaleDateString('pt-PT',{weekday:'long',day:'numeric',month:'long'});
 
+/* ── THEME ── */
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme',theme);
+  localStorage.setItem('fin_theme',theme);
+  const btn=document.getElementById('theme-toggle');
+  if(btn)btn.textContent=theme==='dark'?'🌙':'☀️';
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',theme==='dark'?'#0f1020':'#f6f4ec');
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')||'light';
+  applyTheme(cur==='dark'?'light':'dark');
+}
+applyTheme(localStorage.getItem('fin_theme')||'light');
+
+
 /* ── PAGES ── */
 function showPage(p){
   currentPage=p;
@@ -438,7 +610,11 @@ function showPage(p){
   ['despesas','investimentos','resumo','plano'].forEach((n,i)=>{if(n===p)document.querySelectorAll('.tab')[i].classList.add('active')});
   const fabEl=document.getElementById('fab-btn');
   if(p==='resumo'||p==='plano'){fabEl.style.display='none';}
-  else{fabEl.style.display='flex';fabEl.textContent=p==='investimentos'?'+ Investimento':'+ Despesa';}
+  else{
+    fabEl.style.display='flex';
+    fabEl.textContent='+';
+    fabEl.setAttribute('aria-label',p==='investimentos'?'Adicionar investimento':'Adicionar despesa');
+  }
   if(p==='resumo')renderResumo();
   if(p==='plano')renderPlano();
 }
@@ -446,7 +622,7 @@ function showPage(p){
 /* ── FAB ── */
 document.getElementById('fab-btn').onclick=()=>{
   if(currentPage==='investimentos')openInvModal();
-  else openModal('modal-despesa');
+  else openDespesaModal();
 };
 
 /* ── MODAL ── */
@@ -541,7 +717,7 @@ function saveExpense(){
   const d=loadData();
   d.expenses.push({id:Date.now(),amount:amt,
     desc:document.getElementById('exp-desc').value.trim()||CATS.find(c=>c.id===selectedCat).label,
-    cat:selectedCat,type:document.getElementById('exp-type').value,date:new Date().toISOString()});
+    cat:selectedCat,type:selectedCat==='sub'?'fixo':document.getElementById('exp-type').value,date:new Date().toISOString()});
   saveData(d);closeModal('modal-despesa');showToast('✓ Despesa guardada');renderAll();
 }
 
@@ -613,11 +789,34 @@ document.querySelector('.salary-badge').onclick=()=>{
 };
 
 /* ── RENDER ALL ── */
-function renderAll(){renderExpenses();renderInvestments();if(currentPage==='resumo')renderResumo();if(currentPage==='plano')renderPlano();}
+function renderAll(){renderExpenses();renderInvestments();renderGoals();if(currentPage==='resumo')renderResumo();if(currentPage==='plano')renderPlano();}
 
+function getFixedCostTotal(){
+  const d=loadData();
+  return (d.fixedCosts||[]).reduce((s,f)=>s+(Number(f.amount)||0),0);
+}
+function monthKey(m,y){return `${y}-${String(m+1).padStart(2,'0')}`}
+function isFixedPaid(fixedId,m,y){
+  const d=loadData();
+  const paid=(d.fixedPaid&&d.fixedPaid[monthKey(m,y)])||[];
+  return paid.map(String).includes(String(fixedId));
+}
 function getMonthExp(m,y){
   const d=loadData();
-  return d.expenses.filter(e=>{const ed=new Date(e.date);return ed.getMonth()===m&&ed.getFullYear()===y});
+  const expenses=d.expenses.filter(e=>{const ed=new Date(e.date);return ed.getMonth()===m&&ed.getFullYear()===y});
+  const paid=(d.fixedPaid&&d.fixedPaid[monthKey(m,y)])||[];
+  const paidFixed=(d.fixedCosts||[]).filter(f=>paid.map(String).includes(String(f.id))).map(f=>({
+    id:'fixed-paid-'+f.id,
+    fixedId:f.id,
+    amount:Number(f.amount)||0,
+    desc:f.name,
+    cat:f.cat||'outro',
+    type:'fixo',
+    recurring:true,
+    paid:true,
+    date:new Date(y,m,1,9,0,0).toISOString()
+  }));
+  return [...paidFixed,...expenses];
 }
 function getMonthInvestmentContribs(m,y){
   const d=loadData();
@@ -657,7 +856,8 @@ function renderExpenses(){
   updateExpenseBudgetBar('fixed',fixosTotal,d.budget?.fixos||0,'despesas fixas','var(--yellow)');
   updateExpenseBudgetBar('var',varsTotal,d.budget?.variaveis||0,'despesas variáveis','var(--orange)');
 
-  // by cat
+  renderFixedCosts();
+
   const byCat={};expenses.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amount});
   const catHtml=Object.entries(byCat).sort((a,b)=>b[1]-a[1]).map(([id,amt])=>{
     const c=CATS.find(x=>x.id===id)||{icon:'📦',label:'Outro',color:'#6b7280'};
@@ -666,21 +866,20 @@ function renderExpenses(){
       <span style="font-size:19px">${c.icon}</span>
       <div style="flex:1">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="font-size:13px;font-weight:600">${c.label}</span>
-          <span style="font-size:13px;font-weight:800">${fmt(amt)}</span>
+          <span style="font-size:13px;font-weight:800">${c.label}</span>
+          <span style="font-size:13px;font-weight:900">${fmt(amt)}</span>
         </div>
-        <div style="height:5px;background:var(--border);border-radius:99px;overflow:hidden">
+        <div style="height:7px;background:var(--border);border-radius:99px;overflow:hidden">
           <div style="height:100%;width:${pct}%;background:${c.color};border-radius:99px;transition:width .65s cubic-bezier(.4,0,.2,1)"></div>
         </div>
       </div></div>`;
   }).join('');
   document.getElementById('cat-summary').innerHTML=catHtml||'<div class="empty"><div class="empty-icon">📊</div><p>Sem despesas este mês.</p></div>';
 
-  // list
   const listHtml=[...expenses].reverse().slice(0,25).map((e,i)=>{
     const c=CATS.find(x=>x.id===e.cat)||{icon:'📦',color:'#6b7280'};
-    const dt=new Date(e.date).toLocaleDateString('pt-PT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
-    const typeLabel=e.type==='fixo'?'Fixo':'Variável';
+    const dt=e.recurring?'Mensal':new Date(e.date).toLocaleDateString('pt-PT',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const typeLabel=e.recurring?'Fixo mensal':(e.type==='fixo'?'Fixo':'Variável');
     return `<div class="expense-item" style="animation-delay:${i*25}ms">
       <div class="exp-icon" style="background:${c.color}20">${c.icon}</div>
       <div class="exp-info">
@@ -689,10 +888,124 @@ function renderExpenses(){
       </div>
       <div class="exp-right">
         <span class="exp-amount">−${fmt(e.amount)}</span>
-        <button class="del-btn" onclick="delExp(${e.id})">×</button>
+        ${e.recurring?`<button class="fixed-pay-btn paid" onclick="toggleFixedPaid(${e.fixedId})">Pago ✓</button>`:`<button class="del-btn" onclick="delExp(${e.id})">×</button>`}
       </div></div>`;
   }).join('');
   document.getElementById('expense-list').innerHTML=listHtml||'<div class="empty"><p>Sem transacções.<br>Adiciona a tua primeira despesa!</p></div>';
+}
+
+function openFixedManager(){
+  renderFixedCosts();
+  openModal('modal-fixed-manager');
+}
+function openGoalsManager(){
+  renderGoals();
+  openModal('modal-goals-manager');
+}
+function openFixedCostModal(id){
+  const d=loadData();
+  const f=(d.fixedCosts||[]).find(x=>x.id===id);
+  document.getElementById('fixed-id').value=f?f.id:'';
+  document.getElementById('fixed-name').value=f?f.name:'';
+  document.getElementById('fixed-amount').value=f?String(f.amount).replace('.',','):'';
+  document.getElementById('fixed-cat').value=f?(f.cat||'outro'):'casa';
+  openModal('modal-fixed-cost');
+  setTimeout(()=>document.getElementById('fixed-name').focus(),350);
+}
+function syncFixedBudget(d){
+  const sal=d.salary||0;
+  if(!sal)return false;
+  if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
+  const pct=Math.min(100,Math.ceil((d.fixedCosts||[]).reduce((s,f)=>s+(Number(f.amount)||0),0)/sal*100));
+  d.budget.fixos=pct;
+  let overflow=(d.budget.fixos+d.budget.variaveis+d.budget.invest+d.budget.poupanca)-100;
+  ['variaveis','invest','poupanca'].forEach(k=>{
+    if(overflow>0){
+      const cut=Math.min(d.budget[k],overflow);
+      d.budget[k]-=cut; overflow-=cut;
+    }
+  });
+  return true;
+}
+function syncFixedBudgetFromUI(){
+  const d=loadData();
+  if(!syncFixedBudget(d)){showToast('Define primeiro o ordenado');return}
+  saveData(d);showToast('✓ Percentagem dos fixos ajustada');renderAll();
+}
+function saveFixedCost(){
+  const id=document.getElementById('fixed-id').value;
+  const name=document.getElementById('fixed-name').value.trim();
+  const amount=parseAmt(document.getElementById('fixed-amount').value);
+  if(!name){showToast('⚠️ Introduz um nome');return}
+  if(!amount||amount<=0){showToast('⚠️ Valor inválido');return}
+  const d=loadData();
+  if(!d.fixedCosts)d.fixedCosts=[];
+  if(id){
+    const f=d.fixedCosts.find(x=>String(x.id)===String(id));
+    if(f){f.name=name;f.amount=amount;f.cat=document.getElementById('fixed-cat').value;}
+  }else{
+    d.fixedCosts.push({id:Date.now(),name,amount,cat:document.getElementById('fixed-cat').value});
+  }
+  syncFixedBudget(d);
+  saveData(d);
+  closeModal('modal-fixed-cost');
+  showToast('✓ Custo fixo guardado');
+  renderAll();
+}
+function delFixedCost(id){
+  const d=loadData();
+  d.fixedCosts=(d.fixedCosts||[]).filter(f=>f.id!==id);
+  syncFixedBudget(d);
+  saveData(d);showToast('🗑 Custo fixo removido');renderAll();
+}
+function toggleFixedPaid(id){
+  const d=loadData();
+  if(!d.fixedPaid)d.fixedPaid={};
+  const key=monthKey(now.getMonth(),now.getFullYear());
+  const arr=(d.fixedPaid[key]||[]).map(String);
+  const sid=String(id);
+  if(arr.includes(sid)) d.fixedPaid[key]=arr.filter(x=>x!==sid);
+  else d.fixedPaid[key]=[...arr,sid];
+  saveData(d);
+  showToast(arr.includes(sid)?'Marcado como por pagar':'✓ Marcado como pago');
+  renderAll();
+}
+function renderFixedCosts(){
+  const d=loadData();
+  const list=document.getElementById('fixed-cost-list');
+  const fixed=d.fixedCosts||[];
+  const total=fixed.reduce((s,f)=>s+(Number(f.amount)||0),0);
+  const paidThisMonth=fixed.filter(f=>isFixedPaid(f.id,now.getMonth(),now.getFullYear()));
+  const paidTotal=paidThisMonth.reduce((s,f)=>s+(Number(f.amount)||0),0);
+  const mini=document.getElementById('fixed-cost-mini');
+  if(mini) mini.textContent=fixed.length?`${fmtS(paidTotal)} pagos de ${fmtS(total)} · ${paidThisMonth.length}/${fixed.length}`:'0 € definidos';
+  const managerTotal=document.getElementById('fixed-manager-total');
+  if(managerTotal) managerTotal.textContent=fixed.length?`${fmtS(paidTotal)} pagos / ${fmtS(total)} total`:fmtS(0);
+  if(!list)return;
+  if(!fixed.length){
+    list.innerHTML='<div class="empty" style="padding:18px"><p>Ainda não definiste custos fixos mensais.</p></div>';
+    return;
+  }
+  list.innerHTML=`
+    <div style="font-size:12px;color:var(--muted);font-weight:700;line-height:1.5;margin-bottom:10px">Marca como pago apenas quando pagares esse custo este mês. Só os pagos entram nos totais e gráficos.</div>
+    ${fixed.map(f=>{
+      const c=CATS.find(x=>x.id===f.cat)||{icon:'📦',label:'Outro',color:'#6b7280'};
+      const paid=isFixedPaid(f.id,now.getMonth(),now.getFullYear());
+      return `<div class="fixed-cost-item ${paid?'paid':''}">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0;flex:1">
+          <div class="exp-icon" style="width:38px;height:38px;border-radius:14px;background:${(c.color||'#6b7280')}20">${paid?'✓':c.icon}</div>
+          <div style="min-width:0">
+            <div class="fixed-cost-name">${f.name}</div>
+            <div class="fixed-cost-meta">${c.label} · ${fmtS(f.amount)} · ${paid?'pago este mês':'por pagar'}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="fixed-pay-btn ${paid?'paid':''}" onclick="toggleFixedPaid(${f.id})">${paid?'Pago ✓':'Pagar'}</button>
+          <button class="edit-badge" onclick="openFixedCostModal(${f.id})">editar</button>
+          <button class="del-btn" onclick="delFixedCost(${f.id})">×</button>
+        </div>
+      </div>`
+    }).join('')}`;
 }
 function delExp(id){const d=loadData();d.expenses=d.expenses.filter(e=>e.id!==id);saveData(d);showToast('🗑 Removida');renderAll()}
 
@@ -710,7 +1023,6 @@ function renderInvestments(){
   const gp=document.getElementById('inv-gain-pct');
   gp.textContent=(gainPct>=0?'+':'')+gainPct.toFixed(1)+'%';gp.className='kpi-value '+(gainPct>=0?'green':'red');
 
-  // barra do plano de investimento/poupança usado este mês
   const sal=d.salary||0;
   const invWrap=document.getElementById('inv-sal-prog-wrap');
   const monthInv=getMonthInvestmentTotal(now.getMonth(),now.getFullYear());
@@ -721,25 +1033,25 @@ function renderInvestments(){
     const pct=Math.min(monthInv/planLimit*100,100);
     document.getElementById('inv-sal-bar').style.width=pct+'%';
     const realPct=Math.round(monthInv/planLimit*100);
-    document.getElementById('inv-sal-text').textContent=`${fmtS(monthInv)} usados este mês de ${fmtS(planLimit)} planeados para investimentos/poupança (${realPct}%)`;
+    document.getElementById('inv-sal-text').textContent=`${fmtS(monthInv)} de ${fmtS(planLimit)} usados este mês (${realPct}%)`;
   } else invWrap.style.display='none';
 
   const html=invs.map((inv,idx)=>{
     const g=inv.current-inv.invested;
     const gp2=inv.invested>0?g/inv.invested*100:0;
-    const tk=inv.name.substring(0,5).toUpperCase();
+    const monthTotal=(inv.contributions||[]).filter(c=>{const cd=new Date(c.date);return cd.getMonth()===now.getMonth()&&cd.getFullYear()===now.getFullYear()}).reduce((s,c)=>s+c.amount,0);
     return `<div class="inv-item" style="animation-delay:${idx*25}ms">
-      <div class="inv-ticker">${tk}</div>
+      <div class="inv-ticker">📈</div>
       <div class="inv-info">
         <div class="inv-name">${inv.name}</div>
-        <div class="inv-sub">${inv.type} · Total investido: ${fmtS(inv.invested)} · Este mês: ${fmtS((inv.contributions||[]).filter(c=>{const cd=new Date(c.date);return cd.getMonth()===now.getMonth()&&cd.getFullYear()===now.getFullYear()}).reduce((s,c)=>s+c.amount,0))}</div>
+        <div class="inv-sub">${inv.type} · Inv: ${fmtS(inv.invested)} · Mês: ${fmtS(monthTotal)}</div>
       </div>
       <div class="inv-right">
         <div class="inv-val">${fmtS(inv.current)}</div>
         <div class="inv-gain ${g>=0?'pos':'neg'}">${g>=0?'+':''}${fmt(g)} (${gp2.toFixed(1)}%)</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;margin-left:4px">
-        <button class="edit-badge" onclick="openInvUpdate(${inv.id})">atualizar</button>
+        <button class="edit-badge" onclick="openInvUpdate(${inv.id})">valor</button>
         <button class="edit-badge" onclick="openInvModal(${inv.id})" style="background:rgba(74,222,128,.12);color:var(--green)">+ capital</button>
         <button class="del-btn" onclick="delInv(${inv.id})">×</button>
       </div>
@@ -748,6 +1060,87 @@ function renderInvestments(){
   document.getElementById('invest-list').innerHTML=html||'<div class="empty"><div class="empty-icon">📈</div><p>Sem investimentos.<br>Adiciona o teu portfólio!</p></div>';
 }
 function delInv(id){const d=loadData();d.investments=d.investments.filter(i=>i.id!==id);saveData(d);showToast('🗑 Removido');renderAll()}
+
+
+/* ── OBJETIVOS ── */
+function openGoalModal(id){
+  const d=loadData();
+  const g=(d.goals||[]).find(x=>x.id===id);
+  document.getElementById('goal-id').value=g?g.id:'';
+  document.getElementById('goal-icon').value=g?g.icon:'✈️';
+  document.getElementById('goal-name').value=g?g.name:'';
+  document.getElementById('goal-target').value=g?String(g.target).replace('.',','):'';
+  document.getElementById('goal-current').value=g?String(g.current).replace('.',','):'';
+  document.getElementById('goal-modal-title').childNodes[0].textContent=g?'Editar objetivo ':'Novo objetivo ';
+  openModal('modal-goal');
+  setTimeout(()=>document.getElementById('goal-name').focus(),350);
+}
+function saveGoal(){
+  const id=document.getElementById('goal-id').value;
+  const name=document.getElementById('goal-name').value.trim();
+  const target=parseAmt(document.getElementById('goal-target').value);
+  const current=parseAmt(document.getElementById('goal-current').value)||0;
+  const icon=document.getElementById('goal-icon').value;
+  if(!name){showToast('⚠️ Introduz um nome');return}
+  if(!target||target<=0){showToast('⚠️ Objetivo inválido');return}
+  const d=loadData();
+  if(!d.goals)d.goals=[];
+  if(id){
+    const g=d.goals.find(x=>String(x.id)===String(id));
+    if(g){g.name=name;g.target=target;g.current=Math.min(current,target);g.icon=icon;}
+  }else{
+    d.goals.push({id:Date.now(),name,target,current:Math.min(current,target),icon,date:new Date().toISOString()});
+  }
+  saveData(d);closeModal('modal-goal');showToast('✓ Objetivo guardado');renderAll();
+}
+function openGoalAdd(id){
+  const d=loadData();const g=(d.goals||[]).find(x=>x.id===id);
+  if(!g)return;
+  document.getElementById('goal-add-id').value=id;
+  document.getElementById('goal-add-amount').value='';
+  document.getElementById('goal-add-title').childNodes[0].textContent='Adicionar a '+g.name+' ';
+  openModal('modal-goal-add');
+  setTimeout(()=>document.getElementById('goal-add-amount').focus(),350);
+}
+function addGoalSaving(){
+  const id=parseInt(document.getElementById('goal-add-id').value);
+  const amount=parseAmt(document.getElementById('goal-add-amount').value);
+  if(!amount||amount<=0){showToast('⚠️ Valor inválido');return}
+  const d=loadData();const g=(d.goals||[]).find(x=>x.id===id);
+  if(g){g.current=Math.min((g.current||0)+amount,g.target||0);}
+  saveData(d);closeModal('modal-goal-add');showToast('✓ Poupança adicionada');renderAll();
+}
+function delGoal(id){
+  const d=loadData();d.goals=(d.goals||[]).filter(g=>g.id!==id);saveData(d);showToast('🗑 Objetivo removido');renderAll();
+}
+function renderGoals(){
+  const d=loadData();
+  const goals=d.goals||[];
+  const total=goals.reduce((s,g)=>s+(Number(g.current)||0),0);
+  const totalEl=document.getElementById('goals-total');
+  if(!totalEl)return;
+  totalEl.textContent=fmtS(total);
+  document.getElementById('goals-count').textContent=`${goals.length} objetivo${goals.length!==1?'s':''} ativo${goals.length!==1?'s':''}`;
+  document.getElementById('goals-list').innerHTML=goals.map(g=>{
+    const pct=g.target>0?Math.min(100,Math.round((g.current||0)/g.target*100)):0;
+    const left=Math.max(0,(g.target||0)-(g.current||0));
+    return `<div class="goal-card">
+      <div class="goal-head">
+        <div class="goal-title"><span class="goal-emoji">${g.icon||'💰'}</span><span>${g.name}</span></div>
+        <div class="goal-money">${fmtS(g.current||0)}<div class="goal-sub">faltam ${fmtS(left)}</div></div>
+      </div>
+      <div class="goal-progress"><div style="width:${pct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <span class="goal-sub">${pct}% de ${fmtS(g.target||0)}</span>
+        <span>
+          <button class="edit-badge" onclick="openGoalAdd(${g.id})">+ poupar</button>
+          <button class="edit-badge" onclick="openGoalModal(${g.id})">editar</button>
+          <button class="del-btn" onclick="delGoal(${g.id})">×</button>
+        </span>
+      </div>
+    </div>`
+  }).join('')||'<div class="empty"><div class="empty-icon">🎯</div><p>Ainda não tens objetivos.<br>Cria um objetivo como “Viagem a Bali” ou “Novo carro”.</p></div>';
+}
 
 /* ── RESUMO ── */
 const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -922,6 +1315,8 @@ function renderPlano(){
 /* ── INIT ── */
 updateSalaryBadge();
 renderAll();
+renderFixedCosts();
+renderGoals();
 document.getElementById('resumo-month-label').textContent=`${MNF[resumoMonth]} ${resumoYear}`;
 </script>
 </body>
