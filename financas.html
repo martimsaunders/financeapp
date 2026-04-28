@@ -192,9 +192,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="card-title">Este mês</div>
         <div style="font-size:38px;font-weight:900;letter-spacing:-2px;color:var(--red)" id="month-total-display">0,00 €</div>
         <div style="font-size:12px;color:var(--muted);margin-top:3px" id="month-count-display">0 despesas</div>
-        <div id="sal-prog-wrap" class="prog-wrap" style="display:none">
-          <div class="prog-row"><span>do ordenado gasto</span><span id="sal-pct-text">0%</span></div>
-          <div class="prog-track"><div class="prog-fill" id="sal-bar" style="width:0%"></div></div>
+        <div id="fixed-prog-wrap" class="prog-wrap" style="display:none">
+          <div class="prog-row"><span id="fixed-prog-label">despesas fixas</span><span id="fixed-pct-text">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="fixed-bar" style="width:0%;background:var(--yellow)"></div></div>
+        </div>
+        <div id="var-prog-wrap" class="prog-wrap" style="display:none">
+          <div class="prog-row"><span id="var-prog-label">despesas variáveis</span><span id="var-pct-text">0%</span></div>
+          <div class="prog-track"><div class="prog-fill" id="var-bar" style="width:0%;background:var(--orange)"></div></div>
         </div>
       </div>
       <div class="card">
@@ -216,7 +220,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--f
         <div class="kpi"><div class="kpi-label">Rendimento</div><div class="kpi-value" id="inv-gain-pct">0%</div></div>
       </div>
       <div id="inv-sal-prog-wrap" class="card" style="display:none">
-        <div class="card-title">Do ordenado investido</div>
+        <div class="card-title">Do plano de investimento/poupança</div>
         <div class="prog-track"><div class="prog-fill" id="inv-sal-bar" style="width:0%;background:var(--blue)"></div></div>
         <div style="font-size:12px;color:var(--muted);margin-top:6px" id="inv-sal-text"></div>
       </div>
@@ -632,15 +636,26 @@ function renderExpenses(){
   document.getElementById('month-count-display').textContent=`${expenses.length} despesa${expenses.length!==1?'s':''}`;
 
   const d=loadData();const sal=d.salary||0;
-  const pw=document.getElementById('sal-prog-wrap');
-  if(sal>0){
-    pw.style.display='block';
-    const pct=Math.min(total/sal*100,100),pr=Math.round(total/sal*100);
-    document.getElementById('sal-pct-text').textContent=pr+'%';
-    const bar=document.getElementById('sal-bar');
-    bar.style.width=pct+'%';
-    bar.style.background=pct>90?'var(--red)':pct>65?'var(--yellow)':'var(--green)';
-  } else pw.style.display='none';
+  const fixosTotal=expenses.filter(e=>e.type==='fixo').reduce((s,e)=>s+e.amount,0);
+  const varsTotal=expenses.filter(e=>e.type==='variavel').reduce((s,e)=>s+e.amount,0);
+
+  function updateExpenseBudgetBar(kind,totalSpent,budgetPct,label,barColor){
+    const wrap=document.getElementById(kind+'-prog-wrap');
+    const limit=sal*(budgetPct||0)/100;
+    if(limit>0){
+      wrap.style.display='block';
+      const pct=Math.min(totalSpent/limit*100,100);
+      const realPct=Math.round(totalSpent/limit*100);
+      document.getElementById(kind+'-pct-text').textContent=realPct+'%';
+      document.getElementById(kind+'-prog-label').textContent=`${label} · ${fmtS(totalSpent)} de ${fmtS(limit)}`;
+      const bar=document.getElementById(kind+'-bar');
+      bar.style.width=pct+'%';
+      bar.style.background=pct>=100?'var(--red)':barColor;
+    } else wrap.style.display='none';
+  }
+
+  updateExpenseBudgetBar('fixed',fixosTotal,d.budget?.fixos||0,'despesas fixas','var(--yellow)');
+  updateExpenseBudgetBar('var',varsTotal,d.budget?.variaveis||0,'despesas variáveis','var(--orange)');
 
   // by cat
   const byCat={};expenses.forEach(e=>{byCat[e.cat]=(byCat[e.cat]||0)+e.amount});
@@ -695,15 +710,18 @@ function renderInvestments(){
   const gp=document.getElementById('inv-gain-pct');
   gp.textContent=(gainPct>=0?'+':'')+gainPct.toFixed(1)+'%';gp.className='kpi-value '+(gainPct>=0?'green':'red');
 
-  // barra do ordenado investido este mês (não o portfólio inteiro)
+  // barra do plano de investimento/poupança usado este mês
   const sal=d.salary||0;
   const invWrap=document.getElementById('inv-sal-prog-wrap');
   const monthInv=getMonthInvestmentTotal(now.getMonth(),now.getFullYear());
-  if(sal>0&&monthInv>0){
+  const planPct=(d.budget?.invest||0)+(d.budget?.poupanca||0);
+  const planLimit=sal*planPct/100;
+  if(planLimit>0&&monthInv>0){
     invWrap.style.display='block';
-    const pct=Math.min(monthInv/sal*100,100);
+    const pct=Math.min(monthInv/planLimit*100,100);
     document.getElementById('inv-sal-bar').style.width=pct+'%';
-    document.getElementById('inv-sal-text').textContent=`${fmtS(monthInv)} investidos este mês de ${fmtS(sal)} de ordenado (${Math.round(monthInv/sal*100)}%)`;
+    const realPct=Math.round(monthInv/planLimit*100);
+    document.getElementById('inv-sal-text').textContent=`${fmtS(monthInv)} usados este mês de ${fmtS(planLimit)} planeados para investimentos/poupança (${realPct}%)`;
   } else invWrap.style.display='none';
 
   const html=invs.map((inv,idx)=>{
@@ -798,85 +816,107 @@ function renderResumo(){
 }
 
 /* ── PLANO ── */
-function renderPlano(){
-  const d=loadData();
-  const sal=d.salary||0;
+function normaliseBudget(d){
   if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
-  const b=d.budget;
+  BUDGET_CATS.forEach(c=>{d.budget[c.id]=Math.max(0,Math.min(100,Math.round(d.budget[c.id]||0))) });
+  return d.budget;
+}
 
-  // stacked bar
+function renderBudgetStack(b){
   const segs=document.getElementById('budget-stacked');
-  segs.innerHTML=BUDGET_CATS.map(c=>`<div class="budget-stacked-seg" style="width:${b[c.id]}%;background:${c.color};flex-shrink:0"></div>`).join('');
+  const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
+  if(total<=0){segs.innerHTML='';return;}
+  segs.innerHTML=BUDGET_CATS.map(c=>`<div class="budget-stacked-seg" style="width:${Math.max(0,b[c.id]||0)}%;background:${c.color};flex-shrink:0"></div>`).join('');
+}
 
-  // sliders
-  const total=BUDGET_CATS.reduce((s,c)=>s+b[c.id],0);
-  document.getElementById('budget-warn').textContent=total===100?'Total: 100%':'A ajustar total: '+total+'%';
+function updateBudgetWarning(b){
+  const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
+  const warn=document.getElementById('budget-warn');
+  if(total===100)warn.textContent='Total: 100%';
+  else warn.textContent='Total: '+total+'% · ainda faltam '+(100-total)+'% por distribuir';
+}
 
-  document.getElementById('budget-sliders').innerHTML=BUDGET_CATS.map(c=>`
-    <div class="budget-row">
-      <div class="budget-dot" style="background:${c.color}"></div>
-      <div class="budget-info">
-        <div class="budget-name">${c.label}</div>
-        <div class="budget-pct">${b[c.id]}%${sal>0?' · '+fmtS(sal*b[c.id]/100):''}</div>
-      </div>
-      <span class="budget-val" style="color:${c.color}">${b[c.id]}%</span>
-    </div>
-    <input type="range" class="budget-slider" min="0" max="100" step="1" value="${b[c.id]}" oninput="onBudgetSlide('${c.id}',this.value)">
-  `).join('');
-
-  // values card
+function renderPlanoValues(b,sal){
   const vcard=document.getElementById('plano-vals-card');
+  vcard.style.display='block';
   if(sal>0){
-    vcard.style.display='block';
     document.getElementById('plano-vals').innerHTML=BUDGET_CATS.map(c=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
         <div style="display:flex;align-items:center;gap:10px">
           <div style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
           <span style="font-size:14px;font-weight:600">${c.label}</span>
         </div>
-        <span style="font-size:15px;font-weight:800;color:${c.color}">${fmtS(sal*b[c.id]/100)}</span>
+        <span id="plan-val-${c.id}" style="font-size:15px;font-weight:800;color:${c.color}">${fmtS(sal*(b[c.id]||0)/100)}</span>
       </div>`).join('')+`
       <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;color:var(--muted)">
         <span>Ordenado</span><span style="color:var(--text);font-weight:800">${fmtS(sal)}</span>
       </div>`;
   } else {
-    vcard.style.display='block';
     document.getElementById('plano-vals').innerHTML='<div class="empty" style="padding:20px"><p>Define o teu ordenado no canto superior direito para ver os valores.</p></div>';
   }
 }
 
-function onBudgetSlide(catId, val){
+function getMaxBudgetForCat(b,catId){
+  const otherTotal=BUDGET_CATS.reduce((s,c)=>c.id===catId?s:s+(b[c.id]||0),0);
+  return Math.max(0,100-otherTotal);
+}
+
+function clampBudgetValue(catId,val,b){
+  const wanted=Math.max(0,Math.min(100,Math.round(parseFloat(val)||0)));
+  const maxAllowed=getMaxBudgetForCat(b,catId);
+  return Math.min(wanted,maxAllowed);
+}
+
+function getPreviewBudget(catId,val){
   const d=loadData();
-  if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
-  const b=d.budget;
-  const oldVal=b[catId]||0;
-  let newVal=parseInt(val);
-  let diff=newVal-oldVal;
-  b[catId]=newVal;
+  const b={...normaliseBudget(d)};
+  b[catId]=clampBudgetValue(catId,val,b);
+  return {b,sal:d.salary||0,pct:b[catId]};
+}
 
-  // Mantém sempre o total em 100%, retirando/adicionando percentagem às outras categorias.
-  const others=BUDGET_CATS.map(c=>c.id).filter(id=>id!==catId);
-  if(diff>0){
-    let remaining=diff;
-    others.sort((a,bid)=>b[bid]-b[a]);
-    for(const id of others){
-      const take=Math.min(b[id],remaining);
-      b[id]-=take;
-      remaining-=take;
-      if(remaining<=0)break;
-    }
-    if(remaining>0)b[catId]-=remaining;
-  } else if(diff<0){
-    b[others[0]]+=Math.abs(diff);
-  }
+function previewBudgetSlide(catId, val, el){
+  const {b,sal,pct}=getPreviewBudget(catId,val);
+  if(el&&Number(el.value)!==pct)el.value=pct;
+  const pctEl=document.getElementById('budget-pct-'+catId);
+  const valEl=document.getElementById('budget-val-'+catId);
+  if(pctEl)pctEl.textContent=pct+'%'+(sal>0?' · '+fmtS(sal*pct/100):'');
+  if(valEl)valEl.textContent=pct+'%';
+  const planVal=document.getElementById('plan-val-'+catId);
+  if(planVal&&sal>0)planVal.textContent=fmtS(sal*pct/100);
+  renderBudgetStack(b);
+  updateBudgetWarning(b);
+}
 
-  // Segurança contra arredondamentos/valores fora do intervalo.
-  BUDGET_CATS.forEach(c=>{b[c.id]=Math.max(0,Math.min(100,Math.round(b[c.id]||0)))});
-  const total=BUDGET_CATS.reduce((s,c)=>s+b[c.id],0);
-  if(total!==100)b[others[0]]+=100-total;
-
+function commitBudgetSlide(catId, val, el){
+  const d=loadData();
+  const b=normaliseBudget(d);
+  b[catId]=clampBudgetValue(catId,val,b);
+  if(el&&Number(el.value)!==b[catId])el.value=b[catId];
   saveData(d);
-  renderPlano();
+  renderAll();
+}
+
+function renderPlano(){
+  const d=loadData();
+  const sal=d.salary||0;
+  const b=normaliseBudget(d);
+
+  renderBudgetStack(b);
+  updateBudgetWarning(b);
+
+  document.getElementById('budget-sliders').innerHTML=BUDGET_CATS.map(c=>`
+    <div class="budget-row">
+      <div class="budget-dot" style="background:${c.color}"></div>
+      <div class="budget-info">
+        <div class="budget-name">${c.label}</div>
+        <div class="budget-pct" id="budget-pct-${c.id}">${b[c.id]}%${sal>0?' · '+fmtS(sal*b[c.id]/100):''}</div>
+      </div>
+      <span class="budget-val" id="budget-val-${c.id}" style="color:${c.color}">${b[c.id]}%</span>
+    </div>
+    <input type="range" class="budget-slider" min="0" max="100" step="1" value="${b[c.id]}" oninput="previewBudgetSlide('${c.id}',this.value,this)" onchange="commitBudgetSlide('${c.id}',this.value,this)">
+  `).join('');
+
+  renderPlanoValues(b,sal);
 }
 
 /* ── INIT ── */
