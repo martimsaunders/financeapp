@@ -231,6 +231,24 @@ canvas{border-radius:18px}
 .fixed-pay-btn:active{transform:scale(.97)}
 
 
+/* CALENDAR + BACKUP */
+.calendar-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.calendar-header button{background:var(--surface2);border:1px solid var(--border);color:var(--accent);width:40px;height:40px;border-radius:14px;font-size:18px;font-weight:900;cursor:pointer}
+.calendar-month{font-size:18px;font-weight:900;letter-spacing:-.4px}
+.calendar-weekdays,.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.calendar-weekdays span{text-align:center;font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;margin-bottom:4px}
+.cal-day{min-height:48px;border:none;border-radius:16px;background:var(--surface2);color:var(--text);font-size:13px;font-weight:900;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer}
+.cal-day.empty{visibility:hidden}
+.cal-day.has-spend{background:rgba(239,125,115,.13);color:var(--red)}
+.cal-day.selected{outline:2px solid var(--accent);background:rgba(87,82,163,.10)}
+.cal-spend{font-size:9px;font-weight:900;color:var(--red);line-height:1}
+.cal-detail{margin-top:14px;background:var(--surface2);border-radius:18px;padding:13px 14px;font-size:14px;font-weight:800;color:var(--text)}
+.backup-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.file-hidden{display:none}
+[data-theme="dark"] .calendar-header button,[data-theme="dark"] .cal-day,[data-theme="dark"] .cal-detail{background:#292a42;border-color:#3c3d58;color:var(--text)}
+[data-theme="dark"] .cal-day.has-spend{background:rgba(251,113,133,.16);color:#fecdd3}
+[data-theme="dark"] .cal-day.selected{outline-color:var(--accent2);background:#34315f}
+
 /* v9 DARK MODE CONTRAST FIXES */
 [data-theme="dark"] .salary-badge,
 [data-theme="dark"] .theme-toggle,
@@ -293,6 +311,7 @@ canvas{border-radius:18px}
         <div class="date" id="today-date"></div>
       </div>
       <div class="top-actions">
+        <button class="theme-toggle" id="calendar-toggle" onclick="openCalendar()" aria-label="Calendário">📅</button>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" aria-label="Alternar tema">☀️</button>
         <div class="salary-badge" onclick="openModal('modal-salary')">
           <div class="sal-label">Ordenado</div>
@@ -368,7 +387,7 @@ canvas{border-radius:18px}
         <div class="card-title">Objetivos ligados à carteira</div>
         <div style="font-size:28px;font-weight:900;letter-spacing:-1px" id="goals-page-total">0 €</div>
         <div style="font-size:12px;color:var(--muted);font-weight:800;margin-top:4px" id="goals-page-count">0 objetivos ativos</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px">Os objetivos estão ligados aos investimentos do tipo “Objetivo”. Quando adicionas poupança aqui, também atualiza a carteira.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-top:12px">Define metas e acompanha o progresso.</div>
         <div class="goal-actions">
           <button class="small-pill" onclick="openGoalModal()">+ objetivo</button>
         </div>
@@ -412,10 +431,19 @@ canvas{border-radius:18px}
     <div class="page" id="page-plano">
       <div class="card">
         <div class="card-title">Distribuição do ordenado</div>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Arrasta os sliders para definir como queres dividir o teu ordenado. Cada categoria é independente, mas o total nunca pode passar dos 100%.</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Define o destino do teu ordenado todos os meses.</div>
         <div class="budget-stacked" id="budget-stacked"></div>
         <div class="budget-section" id="budget-sliders"></div>
         <div class="budget-total-warn" id="budget-warn"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Dados</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Guarda uma cópia antes de trocares o ficheiro da app.</div>
+        <div class="backup-actions">
+          <button class="btn-secondary" onclick="exportData()" style="margin-top:0">Exportar</button>
+          <button class="btn-secondary" onclick="document.getElementById('import-file').click()" style="margin-top:0">Importar</button>
+        </div>
+        <input class="file-hidden" type="file" id="import-file" accept="application/json,.json" onchange="importData(event)">
       </div>
       <div class="card" id="plano-vals-card" style="display:none">
         <div class="card-title">Valores mensais com base no ordenado</div>
@@ -489,7 +517,7 @@ canvas{border-radius:18px}
         <input type="text" inputmode="decimal" id="inv-goal-target" placeholder="ex: 2 000,00" autocomplete="off">
         <span class="cur">€</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Como o tipo é Objetivo, isto também cria/atualiza a meta na zona de Objetivos.</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Define quanto queres alcançar.</div>
     </div>
     <button class="btn-primary" id="inv-save-btn" onclick="saveInvestment()">Guardar</button>
   </div>
@@ -563,7 +591,7 @@ canvas{border-radius:18px}
     <div class="field"><label>Nome</label><input type="text" id="fixed-name" placeholder="ex: Renda, Ginásio, Netflix" autocomplete="off"></div>
     <div class="field"><label>Valor mensal</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="fixed-amount" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
     <div class="field"><label>Categoria</label><select id="fixed-cat"><option value="casa">Casa</option><option value="sub">Subscrições</option><option value="transporte">Transporte</option><option value="saude">Saúde</option><option value="outro">Outro</option></select></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Este custo aparece todos os meses na checklist. Só entra nas despesas quando marcares como pago.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Aparece todos os meses para marcares quando for pago.</div>
     <button class="btn-primary" onclick="saveFixedCost()">Guardar custo fixo</button>
   </div>
 </div>
@@ -577,7 +605,7 @@ canvas{border-radius:18px}
     <div class="field"><label>Ícone</label><select id="goal-icon"><option value="✈️">✈️ Viagem</option><option value="🚗">🚗 Carro</option><option value="🏠">🏠 Casa</option><option value="🎁">🎁 Presente</option><option value="💻">💻 Tecnologia</option><option value="💰">💰 Outro</option></select></div>
     <div class="field"><label>Nome do objetivo</label><input type="text" id="goal-name" placeholder="ex: Viagem a Bali, Novo carro" autocomplete="off"></div>
     <div class="field"><label>Valor objetivo</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-target" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
-    <div class="field"><label>Valor já poupado / investido</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-current" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div><div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Este valor cria/atualiza também um investimento do tipo Objetivo.</div></div>
+    <div class="field"><label>Valor já poupado / investido</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-current" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div><div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Regista o ponto de partida deste objetivo.</div></div>
     <button class="btn-primary" onclick="saveGoal()">Guardar objetivo</button>
   </div>
 </div>
@@ -593,6 +621,23 @@ canvas{border-radius:18px}
   </div>
 </div>
 
+
+<!-- MODAL CALENDÁRIO -->
+<div class="modal-overlay" id="modal-calendar" onclick="overlayClick(event,'modal-calendar')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Calendário <button class="modal-close" onclick="closeModal('modal-calendar')">✕</button></h2>
+    <div class="calendar-header">
+      <button onclick="changeCalendarMonth(-1)">‹</button>
+      <div class="calendar-month" id="calendar-month-label"></div>
+      <button onclick="changeCalendarMonth(1)">›</button>
+    </div>
+    <div class="calendar-weekdays"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div class="cal-detail" id="calendar-detail">Toca num dia para ver o total.</div>
+  </div>
+</div>
+
 <!-- MODAL SALARY -->
 <div class="modal-overlay" id="modal-salary" onclick="overlayClick(event,'modal-salary')">
   <div class="modal">
@@ -602,7 +647,7 @@ canvas{border-radius:18px}
       <input type="text" inputmode="decimal" id="salary-input" placeholder="0,00" autocomplete="off" style="font-size:34px!important;font-weight:900!important;letter-spacing:-2px!important;text-align:center!important;padding:18px 48px 18px 16px!important">
       <span class="cur">€</span>
     </div></div>
-    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.7">Usado para calcular o teu saldo, percentagens gastas e plano de distribuição.</div>
+    <div style="font-size:13px;color:var(--muted);text-align:center;margin-bottom:20px;line-height:1.7">Serve de base para o teu saldo e plano mensal.</div>
     <button class="btn-primary" onclick="saveSalary()">Guardar</button>
   </div>
 </div>
@@ -629,6 +674,7 @@ const BUDGET_CATS=[
 
 let selectedCat=null, currentPage='despesas';
 let resumoMonth=new Date().getMonth(), resumoYear=new Date().getFullYear();
+let calendarMonth=new Date().getMonth(), calendarYear=new Date().getFullYear(), selectedCalendarDay=null;
 let pieChart=null, barChart=null;
 
 /* ── STORAGE ── */
@@ -938,26 +984,21 @@ function getFixedCostTotal(){
   return (d.fixedCosts||[]).reduce((s,f)=>s+(Number(f.amount)||0),0);
 }
 function monthKey(m,y){return `${y}-${String(m+1).padStart(2,'0')}`}
-function isFixedPaid(fixedId,m,y){
+function getPaidFixedEntry(fixedId,m,y){
   const d=loadData();
   const paid=(d.fixedPaid&&d.fixedPaid[monthKey(m,y)])||[];
-  return paid.map(String).includes(String(fixedId));
+  return paid.find(x=>String(typeof x==='object'?x.id:x)===String(fixedId));
 }
+function isFixedPaid(fixedId,m,y){return !!getPaidFixedEntry(fixedId,m,y)}
 function getMonthExp(m,y){
   const d=loadData();
   const expenses=d.expenses.filter(e=>{const ed=new Date(e.date);return ed.getMonth()===m&&ed.getFullYear()===y});
   const paid=(d.fixedPaid&&d.fixedPaid[monthKey(m,y)])||[];
-  const paidFixed=(d.fixedCosts||[]).filter(f=>paid.map(String).includes(String(f.id))).map(f=>({
-    id:'fixed-paid-'+f.id,
-    fixedId:f.id,
-    amount:Number(f.amount)||0,
-    desc:f.name,
-    cat:f.cat||'outro',
-    type:'fixo',
-    recurring:true,
-    paid:true,
-    date:new Date(y,m,1,9,0,0).toISOString()
-  }));
+  const paidFixed=(d.fixedCosts||[]).map(f=>{
+    const entry=paid.find(x=>String(typeof x==='object'?x.id:x)===String(f.id));
+    if(!entry)return null;
+    return {id:'fixed-paid-'+f.id,fixedId:f.id,amount:Number(f.amount)||0,desc:f.name,cat:f.cat||'outro',type:'fixo',recurring:true,paid:true,date:(typeof entry==='object'&&entry.date)?entry.date:new Date(y,m,1,9,0,0).toISOString()};
+  }).filter(Boolean);
   return [...paidFixed,...expenses];
 }
 function getMonthInvestmentContribs(m,y){
@@ -1104,13 +1145,15 @@ function toggleFixedPaid(id){
   const d=loadData();
   if(!d.fixedPaid)d.fixedPaid={};
   const key=monthKey(now.getMonth(),now.getFullYear());
-  const arr=(d.fixedPaid[key]||[]).map(String);
+  const arr=d.fixedPaid[key]||[];
   const sid=String(id);
-  if(arr.includes(sid)) d.fixedPaid[key]=arr.filter(x=>x!==sid);
-  else d.fixedPaid[key]=[...arr,sid];
+  const already=arr.some(x=>String(typeof x==='object'?x.id:x)===sid);
+  if(already) d.fixedPaid[key]=arr.filter(x=>String(typeof x==='object'?x.id:x)!==sid);
+  else d.fixedPaid[key]=[...arr,{id, date:new Date().toISOString()}];
   saveData(d);
-  showToast(arr.includes(sid)?'Marcado como por pagar':'✓ Marcado como pago');
+  showToast(already?'Marcado como por pagar':'✓ Marcado como pago');
   renderAll();
+  if(document.getElementById('modal-calendar')?.classList.contains('open'))renderSpendingCalendar();
 }
 function renderFixedCosts(){
   const d=loadData();
@@ -1298,7 +1341,7 @@ function goalCardHtml(g){
     </div>
     <div class="goal-progress"><div style="width:${pct}%"></div></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-      <span class="goal-sub">${pct}% de ${fmtS(g.target||0)} · ligado à carteira</span>
+      <span class="goal-sub">${pct}% de ${fmtS(g.target||0)}</span>
       <span>
         <button class="edit-badge" onclick="openGoalAdd(${g.id})">+ poupar</button>
         <button class="edit-badge" onclick="openGoalModal(${g.id})">editar</button>
@@ -1311,7 +1354,7 @@ function renderGoals(){
   const d=loadData();
   const goals=d.goals||[];
   const total=goals.reduce((s,g)=>s+(Number(g.current)||0),0);
-  const empty='<div class="empty"><div class="empty-icon">🎯</div><p>Ainda não tens objetivos.<br>Cria um objetivo aqui ou adiciona um investimento do tipo “Objetivo”.</p></div>';
+  const empty='<div class="empty"><div class="empty-icon">🎯</div><p>Ainda não tens objetivos.<br>Poupa para aquilo que queres alcançar.</p></div>';
   const html=goals.map(goalCardHtml).join('')||empty;
   const totalEl=document.getElementById('goals-total');
   if(totalEl){
@@ -1496,6 +1539,26 @@ function renderPlano(){
 
   renderPlanoValues(b,sal);
 }
+
+
+/* ── CALENDÁRIO ── */
+function openCalendar(){selectedCalendarDay=null;renderSpendingCalendar();openModal('modal-calendar');}
+function changeCalendarMonth(dir){calendarMonth+=dir;if(calendarMonth<0){calendarMonth=11;calendarYear--;}if(calendarMonth>11){calendarMonth=0;calendarYear++;}selectedCalendarDay=null;renderSpendingCalendar();}
+function getDailySpendMap(m,y){const map={};getMonthExp(m,y).forEach(e=>{const d=new Date(e.date);const day=d.getDate();map[day]=(map[day]||0)+(Number(e.amount)||0);});return map;}
+function renderSpendingCalendar(){
+  const label=document.getElementById('calendar-month-label');const grid=document.getElementById('calendar-grid');const detail=document.getElementById('calendar-detail');if(!label||!grid)return;
+  label.textContent=`${MNF[calendarMonth]} ${calendarYear}`;const first=new Date(calendarYear,calendarMonth,1);const days=new Date(calendarYear,calendarMonth+1,0).getDate();const start=(first.getDay()+6)%7;const spend=getDailySpendMap(calendarMonth,calendarYear);let html='';
+  for(let i=0;i<start;i++)html+='<button class="cal-day empty"></button>';
+  for(let d=1;d<=days;d++){const total=spend[d]||0;html+=`<button class="cal-day ${total>0?'has-spend':''} ${selectedCalendarDay===d?'selected':''}" onclick="selectCalendarDay(${d})"><span>${d}</span>${total>0?`<span class="cal-spend">${fmtS(total)}</span>`:''}</button>`;}
+  grid.innerHTML=html;
+  if(selectedCalendarDay){const total=spend[selectedCalendarDay]||0;detail.textContent=total>0?`${selectedCalendarDay} de ${MNF[calendarMonth]}: ${fmt(total)} gastos`:`${selectedCalendarDay} de ${MNF[calendarMonth]}: sem despesas`;}
+  else{const monthTotal=Object.values(spend).reduce((sum,value)=>sum+value,0);detail.textContent=monthTotal>0?`Total do mês: ${fmt(monthTotal)}`:'Sem despesas neste mês.';}
+}
+function selectCalendarDay(day){selectedCalendarDay=day;renderSpendingCalendar();}
+
+/* ── BACKUP ── */
+function exportData(){const data=loadData();const payload=JSON.stringify({version:'fin_v12',exportedAt:new Date().toISOString(),data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='financas-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast('✓ Backup exportado');}
+function importData(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const data=parsed.data||parsed;if(!data||!Array.isArray(data.expenses)||!Array.isArray(data.investments))throw new Error('invalid');saveData(data);event.target.value='';showToast('✓ Dados importados');updateSalaryBadge();renderAll();renderFixedCosts();renderGoals();}catch(e){showToast('⚠️ Ficheiro inválido')}};reader.readAsText(file);}
 
 /* ── INIT ── */
 updateSalaryBadge();
