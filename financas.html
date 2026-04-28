@@ -58,6 +58,11 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-
 html[data-theme="dark"] body::before{background:var(--status-bg,#0f1020)}
 body.modal-open::before{background:var(--status-bg,#c3c0bd)}
 html[data-theme="dark"] body.modal-open::before{background:var(--status-bg,#090a14)}
+
+/* v42: keep iPhone top/status color and app colors switching together */
+html.theme-lock *,
+html.theme-lock *::before,
+html.theme-lock *::after{transition:none!important;animation:none!important}
 .app{display:flex;flex-direction:column;height:var(--app-height,100dvh);max-width:430px;margin:0 auto;position:fixed;inset:0;left:50%;transform:translateX(-50%);width:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));overflow:hidden}
 @supports (-webkit-touch-callout:none){.app{height:var(--app-height,-webkit-fill-available)}}
 
@@ -932,19 +937,24 @@ function syncIOSChrome(){
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(appleStatus)appleStatus.setAttribute('content','black-translucent');
 }
-function applyTheme(theme){
-  document.documentElement.setAttribute('data-theme',theme);
+function applyTheme(theme, instant=false){
+  const root=document.documentElement;
+  if(instant)root.classList.add('theme-lock');
+  root.setAttribute('data-theme',theme);
   localStorage.setItem('fin_theme',theme);
   const btn=document.getElementById('theme-toggle');
   if(btn)btn.innerHTML=icon(theme==='dark'?'moon':'sun');
   syncIOSChrome();
+  if(instant){
+    requestAnimationFrame(()=>requestAnimationFrame(()=>root.classList.remove('theme-lock')));
+  }
 }
 function toggleTheme(){
   const cur=document.documentElement.getAttribute('data-theme')||'light';
-  applyTheme(cur==='dark'?'light':'dark');
+  applyTheme(cur==='dark'?'light':'dark', true);
 }
 hydrateStaticIcons();
-applyTheme(localStorage.getItem('fin_theme')||'light');
+applyTheme(localStorage.getItem('fin_theme')||'light', true);
 
 /* iOS/PWA viewport polish */
 function fixIOSViewport(){
