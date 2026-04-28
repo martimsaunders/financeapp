@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#f6f4ec">
 <meta name="apple-mobile-web-app-title" content="Trackr">
 <meta name="application-name" content="Trackr">
@@ -54,17 +54,10 @@
 html{height:100%;background:var(--bg);overflow:hidden}
 body{min-height:100%;height:100%;margin:0;padding:0;background:linear-gradient(180deg,var(--bg),var(--bg2));color:var(--text);font-family:var(--font);overflow:hidden;overscroll-behavior:none;touch-action:manipulation}
 @supports (-webkit-touch-callout:none){html,body{height:-webkit-fill-available}}
-body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-area-inset-top),22px);background:var(--bg);z-index:0;pointer-events:none;transition:background .25s var(--ease),height .25s var(--ease)}
-
-/* v36: status-area and modal polish */
-html[data-theme="dark"] body{background:#0f1020 !important;}
-html[data-theme="dark"] body::before{background:#0f1020 !important;}
-html[data-theme="dark"] body.modal-open::before{background:#0f1020 !important;z-index:650;}
-html[data-theme="light"] body.modal-open::before{background:#f6f4ec !important;z-index:650;}
-body.modal-open{background:var(--bg) !important;}
-
-body.modal-open::before{height:100dvh;background:rgba(17,18,31,.46);z-index:499}
-[data-theme="dark"] body.modal-open::before{background:rgba(0,0,0,.52)}
+body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-area-inset-top),22px);background:var(--bg);z-index:1;pointer-events:none;transition:background .25s var(--ease),height .25s var(--ease)}
+html[data-theme="dark"] body::before{background:#0f1020}
+body.modal-open::before{height:max(env(safe-area-inset-top),22px);background:#c3c0bd;z-index:501}
+html[data-theme="dark"] body.modal-open::before{background:#090a14}
 .app{display:flex;flex-direction:column;height:var(--app-height,100dvh);max-width:430px;margin:0 auto;position:fixed;inset:0;left:50%;transform:translateX(-50%);width:100%;background:linear-gradient(180deg,var(--bg),var(--bg2));overflow:hidden}
 @supports (-webkit-touch-callout:none){.app{height:var(--app-height,-webkit-fill-available)}}
 
@@ -115,8 +108,10 @@ body::after{content:none}
 
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(17,18,31,0);z-index:500;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;transition:background .3s var(--ease)}
-.modal-overlay.open{background:transparent;pointer-events:all}
-.modal{background:#fff;border-radius:30px;padding:8px 24px 52px;width:calc(100% - 16px);max-width:414px;margin:0 auto max(8px, env(safe-area-inset-bottom));transform:translateY(calc(100% + 20px));transition:transform .38s cubic-bezier(.32,0,.67,0);max-height:min(82svh, 720px);overflow-y:auto;box-shadow:0 -12px 34px rgba(41,45,80,.10)}
+.modal-overlay.open{background:rgba(17,18,31,.22);pointer-events:all}
+html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
+.modal{background:#fff;border-radius:30px;padding:8px 24px 52px;width:calc(100% - 16px);max-width:414px;margin:0 auto max(8px, env(safe-area-inset-bottom));transform:translateY(calc(100% + 20px));transition:transform .38s cubic-bezier(.32,0,.67,0);max-height:min(76svh, 680px);overflow-y:auto;box-shadow:none}
+@supports not (height:1svh){.modal{max-height:76vh}}
 .modal-overlay.open .modal{transform:translateY(0);transition:transform .4s cubic-bezier(.16,1,.3,1)}
 .modal::-webkit-scrollbar{display:none}
 .modal-handle{width:42px;height:5px;background:#ded9c9;border-radius:99px;margin:12px auto 20px}
@@ -385,27 +380,6 @@ body::after{content:none}
 .inv-status{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px;line-height:1.35}
 .inv-status.good{color:var(--green)}
 .inv-status.bad{color:var(--red)}
-
-
-/* v37: restore v34 bottom nav visibility - no bottom bubble/shadow */
-.tabs{box-shadow:none !important;}
-[data-theme="dark"] .tabs{box-shadow:none !important;background:rgba(32,33,53,.82) !important;}
-body::after{content:none !important;}
-
-/* v39: natural overlay + matching iPhone top/status area */
-html{background:#f6f4ec !important;}
-html[data-theme="dark"]{background:#0f1020 !important;}
-body::before{background:var(--bg) !important;z-index:1 !important;}
-html[data-theme="dark"] body::before{background:#0f1020 !important;}
-/* Match only the safe-area strip to the same dimmed colour as the overlay, instead of leaving it white or covering the whole app. */
-body.modal-open::before{background:#c3c0bd !important;}
-html[data-theme="dark"] body.modal-open::before{background:#090a14 !important;}
-.modal-overlay{align-items:flex-end !important;background:rgba(17,18,31,0) !important;}
-.modal-overlay.open{background:rgba(17,18,31,.22) !important;pointer-events:all !important;}
-html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34) !important;}
-.modal{width:calc(100% - 16px) !important;max-width:414px !important;max-height:min(76svh, 680px) !important;margin:0 auto max(10px, env(safe-area-inset-bottom)) !important;border-radius:30px !important;box-shadow:0 -10px 28px rgba(41,45,80,.08) !important;}
-@supports not (height:1svh){.modal{max-height:76vh !important;}}
-.tabs{box-shadow:none !important;}
 
 </style>
 </head>
@@ -1032,20 +1006,12 @@ function openModal(id){
   if(sheet)sheet.scrollTop=0;
   overlay.classList.add('open');
   document.body.classList.add('modal-open');
-  const theme=document.documentElement.getAttribute('data-theme')||'light';
-  const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',theme==='dark'?'#090a14':'#c3c0bd');
-  const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(appleStatus)appleStatus.setAttribute('content',theme==='dark'?'black-translucent':'default');
 }
 
 function closeModal(id){
   const overlay=document.getElementById(id);
   if(overlay)overlay.classList.remove('open');
-  if(!document.querySelector('.modal-overlay.open')){
-    document.body.classList.remove('modal-open');
-    applyTheme(document.documentElement.getAttribute('data-theme')||'light');
-  }
+  if(!document.querySelector('.modal-overlay.open'))document.body.classList.remove('modal-open');
   setInputActive(false);
 }
 
