@@ -494,7 +494,68 @@ html[data-theme="dark"] .modal-overlay.open{
   z-index:501!important;
 }
 
+
+/* v59: iPhone top always matches the app background */
+html,
+body{
+  background:var(--status-bg,var(--bg))!important;
+  background-color:var(--status-bg,var(--bg))!important;
+}
+
+html[data-theme="light"],
+html[data-theme="light"] body{
+  --status-bg:#f6f4ec;
+}
+
+html[data-theme="dark"],
+html[data-theme="dark"] body{
+  --status-bg:#0f1020;
+}
+
+body::before,
+html[data-theme="dark"] body::before,
+body.modal-open::before,
+html[data-theme="dark"] body.modal-open::before{
+  content:''!important;
+  position:fixed!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  height:max(env(safe-area-inset-top),22px)!important;
+  background:var(--status-bg,var(--bg))!important;
+  background-color:var(--status-bg,var(--bg))!important;
+  z-index:650!important;
+  pointer-events:none!important;
+  transition:none!important;
+}
+
+/* keep one dimming layer only */
+.modal-overlay{
+  z-index:700!important;
+}
+
+.modal{
+  z-index:701!important;
+}
+
 </style>
+
+<script>
+(function(){
+  try{
+    var theme = localStorage.getItem('fin_theme') || 'light';
+    var color = theme === 'dark' ? '#0f1020' : '#f6f4ec';
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.style.setProperty('--status-bg', color);
+    document.documentElement.style.background = color;
+    document.documentElement.style.backgroundColor = color;
+    document.body && (document.body.style.backgroundColor = color);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', color);
+  }catch(e){}
+})();
+</script>
+
 </head>
 <body>
 <div class="app">
@@ -1104,10 +1165,10 @@ document.getElementById('today-date').textContent=now.toLocaleDateString('en-GB'
 function syncIOSChrome(){
   const root=document.documentElement;
   const theme=root.getAttribute('data-theme')||'light';
-
   const color = theme==='dark' ? '#0f1020' : '#f6f4ec';
 
   root.style.setProperty('--status-bg',color);
+  root.style.background=color;
   root.style.backgroundColor=color;
   document.body.style.backgroundColor=color;
 
