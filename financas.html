@@ -1688,7 +1688,9 @@ function delExp(id){const d=loadData();d.expenses=d.expenses.filter(e=>e.id!==id
 
 /* ── RENDER INVESTMENTS ── */
 function renderInvestments(){
-  const d=loadData();const invs=d.investments;
+  const d=loadData();
+  const b=normaliseBudget(d);
+  const invs=d.investments;
   const totInv=invs.reduce((s,i)=>s+i.invested,0);
   const totCur=invs.reduce((s,i)=>s+i.current,0);
   const gain=totCur-totInv;
@@ -1721,9 +1723,9 @@ function renderInvestments(){
     } else wrap.style.display='none';
   }
 
-  updateInvestBudgetBar('invest',monthInvestments,d.budget?.invest||0,'investments','var(--blue)');
-  updateInvestBudgetBar('savings',monthSavings,d.budget?.poupanca||0,'savings','var(--green)');
-  if(planCard)planCard.style.display=((sal>0)&&((d.budget?.invest||0)>0||(d.budget?.poupanca||0)>0))?'block':'none';
+  updateInvestBudgetBar('invest',monthInvestments,b.invest||0,'investments','var(--blue)');
+  updateInvestBudgetBar('savings',monthSavings,b.poupanca||0,'savings','var(--green)');
+  if(planCard)planCard.style.display=((sal>0)&&((b.invest||0)>0||(b.poupanca||0)>0))?'block':'none';
 
   const html=invs.map((inv,idx)=>{
     const g=cents(inv.current-inv.invested);
