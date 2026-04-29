@@ -409,84 +409,21 @@ html.status-instant body::before{transition:none!important}
 .inv-status.bad{color:var(--red)}
 
 
-/* v56: v45 base + exact synced iPhone top color */
-html,
-body{
-  background:var(--status-bg,var(--bg))!important;
-  background-color:var(--status-bg,var(--bg))!important;
-}
-
-body::before,
-html[data-theme="dark"] body::before,
-body.modal-open::before,
-html[data-theme="dark"] body.modal-open::before{
-  background:var(--status-bg,var(--bg))!important;
-}
-
-/* During theme switches, all sections change together like v45 */
-html.theme-lock,
-html.theme-lock body,
-html.theme-lock body::before,
-html.theme-lock .app,
-html.theme-lock .card,
-html.theme-lock .kpi,
-html.theme-lock .salary-badge,
-html.theme-lock .tabs,
-html.theme-lock .tab,
-html.theme-lock .modal,
-html.theme-lock .field input,
-html.theme-lock .field select{
-  transition:none!important;
-}
-
-/* During modal open/close, remove the delayed top-color transition only */
-html.status-instant,
-html.status-instant body,
+/* v61: stable v45 layout + synced top/status transition */
 html.status-instant body::before{
-  transition:none!important;
+  transition:background .3s var(--ease)!important;
 }
 
-
-/* v60: no separate iPhone-top layer — the app background itself fills the status area */
-html,
-body{
-  background:linear-gradient(180deg,var(--bg),var(--bg2))!important;
-  background-color:var(--bg)!important;
+body::before{
+  transition:background .3s var(--ease)!important;
 }
 
-body::before,
-body::after,
-#ios-status-fill{
-  content:none!important;
-  display:none!important;
-  background:none!important;
+body.modal-open::before{
+  background:#c4c2bc!important;
 }
 
-/* Ensure the app starts at the very top, behind the translucent iPhone status bar */
-.app{
-  inset:0!important;
-  top:0!important;
-  background:linear-gradient(180deg,var(--bg),var(--bg2))!important;
-}
-
-/* One single dimming layer: covers the app/top at the same time */
-.modal-overlay{
-  position:fixed!important;
-  inset:0!important;
-  z-index:700!important;
-}
-
-.modal{
-  position:relative;
-  z-index:701!important;
-}
-
-/* Keep theme changes synced like v45 */
-html.theme-lock *,
-html.theme-lock *::before,
-html.theme-lock *::after{
-  transition:none!important;
-  animation:none!important;
+html[data-theme="dark"] body.modal-open::before{
+  background:#0a0b15!important;
 }
 
 </style>
@@ -1097,16 +1034,15 @@ document.getElementById('today-date').textContent=now.toLocaleDateString('en-GB'
 
 /* ── THEME ── */
 function syncIOSChrome(){
-  const root=document.documentElement;
-  const theme=root.getAttribute('data-theme')||'light';
-  const color = theme==='dark' ? '#0f1020' : '#f6f4ec';
-
-  root.style.backgroundColor=color;
-  document.body.style.backgroundColor=color;
-
+  const theme=document.documentElement.getAttribute('data-theme')||'light';
+  const modalOpen=document.body.classList.contains('modal-open');
+  const color=modalOpen
+    ? (theme==='dark'?'#0a0b15':'#c4c2bc')
+    : (theme==='dark'?'#0f1020':'#f6f4ec');
+  document.documentElement.style.setProperty('--status-bg',color);
+  document.documentElement.style.backgroundColor=color;
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta)meta.setAttribute('content',color);
-
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(appleStatus)appleStatus.setAttribute('content','black-translucent');
 }
@@ -1128,11 +1064,6 @@ function toggleTheme(){
 }
 hydrateStaticIcons();
 applyTheme(localStorage.getItem('fin_theme')||'light', true);
-
-syncIOSChrome();
-window.addEventListener('pageshow', syncIOSChrome);
-document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncIOSChrome(); });
-
 
 /* iOS/PWA viewport polish */
 function fixIOSViewport(){
@@ -1194,17 +1125,13 @@ document.getElementById('fab-btn').onclick=()=>{
 };
 
 /* ── MODAL ── */
-function releaseStatusInstant(){
-  requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('status-instant')));
-}
+function releaseStatusInstant(){}
 function openModal(id){
   document.querySelectorAll('.modal-overlay.open').forEach(m=>{
     if(m.id!==id)m.classList.remove('open');
   });
-
   const overlay=document.getElementById(id);
   if(!overlay){return;}
-
   const sheet=overlay.querySelector('.modal');
   if(sheet)sheet.scrollTop=0;
 
