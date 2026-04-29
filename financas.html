@@ -447,40 +447,51 @@ html.status-instant body::before{
 }
 
 
-/* v57: sync iPhone top dim with modal backdrop, without changing the base v45 colors */
+/* v58: one single overlay over the whole app/top area */
 body::before,
 html[data-theme="dark"] body::before,
 body.modal-open::before,
 html[data-theme="dark"] body.modal-open::before{
   background:var(--status-bg,var(--bg))!important;
+  z-index:0!important;
+  transition:none!important;
 }
 
-/* top-only overlay: same dim as the modal backdrop, same timing */
+/* Remove any separate top/bottom overlay layers from previous versions */
 body::after{
-  content:''!important;
-  position:fixed!important;
-  top:0!important;
-  left:0!important;
-  right:0!important;
-  height:max(env(safe-area-inset-top),22px)!important;
-  background:rgba(17,18,31,.22)!important;
-  opacity:0;
-  z-index:651!important;
-  pointer-events:none!important;
-  transition:opacity .3s var(--ease)!important;
+  content:none!important;
+  display:none!important;
 }
 
-html[data-theme="dark"] body::after{
+html,
+body{
+  background:var(--status-bg,var(--bg))!important;
+  background-color:var(--status-bg,var(--bg))!important;
+}
+
+.app{
+  z-index:1;
+}
+
+/* The modal overlay now covers the app AND the top safe-area together */
+.modal-overlay{
+  z-index:500!important;
+  inset:0!important;
+  background:rgba(17,18,31,0)!important;
+  transition:background .3s var(--ease)!important;
+}
+
+.modal-overlay.open{
+  background:rgba(17,18,31,.22)!important;
+}
+
+html[data-theme="dark"] .modal-overlay.open{
   background:rgba(0,0,0,.34)!important;
 }
 
-body.modal-open::after{
-  opacity:1;
-}
-
-/* do not block this top overlay animation */
-html.status-instant body::after{
-  transition:opacity .3s var(--ease)!important;
+.modal{
+  position:relative;
+  z-index:501!important;
 }
 
 </style>
@@ -1194,27 +1205,30 @@ function releaseStatusInstant(){
   requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('status-instant')));
 }
 function openModal(id){
-  document.documentElement.classList.add('status-instant');
   document.querySelectorAll('.modal-overlay.open').forEach(m=>{
     if(m.id!==id)m.classList.remove('open');
   });
+
   const overlay=document.getElementById(id);
-  if(!overlay){releaseStatusInstant();return;}
+  if(!overlay){return;}
+
   const sheet=overlay.querySelector('.modal');
   if(sheet)sheet.scrollTop=0;
+
   document.body.classList.add('modal-open');
   syncIOSChrome();
   overlay.classList.add('open');
-  releaseStatusInstant();
 }
 
 function closeModal(id){
-  document.documentElement.classList.add('status-instant');
   const overlay=document.getElementById(id);
   if(overlay)overlay.classList.remove('open');
-  if(!document.querySelector('.modal-overlay.open'))document.body.classList.remove('modal-open');
+
+  if(!document.querySelector('.modal-overlay.open')){
+    document.body.classList.remove('modal-open');
+  }
+
   syncIOSChrome();
-  releaseStatusInstant();
   setInputActive(false);
 }
 
