@@ -500,8 +500,7 @@ body::before{
 }
 
 
-/* v51: remove delayed top-color change on modal open.
-   The status area keeps the base theme color; the overlay dims it together with the app. */
+/* v52: correct iPhone top color in dark/light and sync modal dimming */
 #ios-status-fill,
 body::before{
   background:var(--status-bg,var(--bg))!important;
@@ -509,17 +508,42 @@ body::before{
   z-index:120!important;
 }
 
+html[data-theme="light"] #ios-status-fill,
+html[data-theme="light"] body::before{
+  background:#f6f4ec!important;
+}
+
+html[data-theme="dark"] #ios-status-fill,
+html[data-theme="dark"] body::before{
+  background:#0f1020!important;
+}
+
+/* Modal open must not recolor the top by itself */
+body.modal-open #ios-status-fill,
+body.modal-open::before,
+html[data-theme="dark"] body.modal-open #ios-status-fill,
+html[data-theme="dark"] body.modal-open::before{
+  background:var(--status-bg,var(--bg))!important;
+}
+
+/* The overlay now darkens the iPhone top zone too, so everything changes together */
 .modal-overlay{
   z-index:700!important;
   inset:0!important;
+  background:rgba(17,18,31,0)!important;
 }
 
-/* Do not recolor the top separately while a modal is open; let the overlay darken it naturally */
-body.modal-open::before,
-html[data-theme="dark"] body.modal-open::before,
-body.modal-open #ios-status-fill,
-html[data-theme="dark"] body.modal-open #ios-status-fill{
-  background:var(--status-bg,var(--bg))!important;
+.modal-overlay.open{
+  background:rgba(17,18,31,.22)!important;
+}
+
+html[data-theme="dark"] .modal-overlay.open{
+  background:rgba(0,0,0,.34)!important;
+}
+
+.modal{
+  position:relative;
+  z-index:701!important;
 }
 
 </style>
@@ -1137,7 +1161,6 @@ function syncIOSChrome(){
   const color = theme==='dark' ? '#0f1020' : '#f6f4ec';
 
   root.classList.remove('status-modal-light','status-modal-dark');
-
   root.style.setProperty('--status-bg', color);
   root.style.backgroundColor=color;
   document.body.style.backgroundColor=color;
@@ -1245,6 +1268,7 @@ function openModal(id){
   if(sheet)sheet.scrollTop=0;
 
   document.body.classList.add('modal-open');
+  document.documentElement.classList.remove('status-modal-light','status-modal-dark');
   syncIOSChrome();
 
   overlay.classList.add('preopen');
