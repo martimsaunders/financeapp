@@ -58,6 +58,10 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;height:max(env(safe-
 html[data-theme="dark"] body::before{background:var(--status-bg,#0f1020)}
 body.modal-open::before{background:var(--status-bg,#c3c0bd)}
 html[data-theme="dark"] body.modal-open::before{background:var(--status-bg,#090a14)}
+#ios-status-fill{position:fixed;top:0;left:0;right:0;height:calc(env(safe-area-inset-top,0px) + 4px);min-height:24px;background:var(--status-bg,var(--bg));z-index:10000;pointer-events:none;transition:none!important}
+html[data-theme="dark"] #ios-status-fill{background:var(--status-bg,#0f1020)}
+body.modal-open #ios-status-fill{background:var(--status-bg,#c3c0bd)}
+html[data-theme="dark"] body.modal-open #ios-status-fill{background:var(--status-bg,#090a14)}
 
 /* v42: keep iPhone top/status color and app colors switching together */
 html.theme-lock *,
@@ -414,6 +418,7 @@ html.status-modal-dark,html.status-modal-dark body{background:#090a14!important}
 </style>
 </head>
 <body>
+<div id="ios-status-fill" aria-hidden="true"></div>
 <div class="app">
   <div class="topbar">
     <div class="topbar-row">
@@ -1030,6 +1035,8 @@ function syncIOSChrome(){
   root.style.setProperty('--status-bg',color);
   root.style.backgroundColor=color;
   document.body.style.backgroundColor=color;
+  const fill=document.getElementById('ios-status-fill');
+  if(fill)fill.style.backgroundColor=color;
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta)meta.setAttribute('content',color);
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
@@ -1101,6 +1108,8 @@ function showPage(p){
     fabEl.textContent='+';
     fabEl.setAttribute('aria-label',p==='investimentos'?'Add investment':p==='objetivos'?'Add goal':'Add expense');
   }
+  if(p==='despesas')renderExpenses();
+  if(p==='investimentos')renderInvestments();
   if(p==='resumo')renderSummary();
   if(p==='definicoes'){renderPlano();updateSalaryBadge();renderBackupStatus();}
   if(p==='objetivos')renderGoals();
@@ -1116,6 +1125,7 @@ document.getElementById('fab-btn').onclick=()=>{
 /* ── MODAL ── */
 function releaseStatusInstant(){}
 function openModal(id){
+  document.documentElement.classList.add('theme-lock');
   document.querySelectorAll('.modal-overlay.open').forEach(m=>{
     if(m.id!==id)m.classList.remove('open');
   });
@@ -1126,14 +1136,17 @@ function openModal(id){
   document.body.classList.add('modal-open');
   syncIOSChrome();
   overlay.classList.add('open');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('theme-lock')));
 }
 
 function closeModal(id){
+  document.documentElement.classList.add('theme-lock');
   const overlay=document.getElementById(id);
   if(overlay)overlay.classList.remove('open');
   if(!document.querySelector('.modal-overlay.open'))document.body.classList.remove('modal-open');
   syncIOSChrome();
   setInputActive(false);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('theme-lock')));
 }
 
 function overlayClick(e,id){if(e.target===document.getElementById(id))closeModal(id)}
@@ -2047,6 +2060,9 @@ function previewBudgetSlide(catId, val, el){
 
 function commitBudgetSlide(catId, val, el){
   previewBudgetSlide(catId,val,el);
+  if(currentPage==='despesas')renderExpenses();
+  if(currentPage==='investimentos')renderInvestments();
+  if(currentPage==='resumo')renderSummary();
 }
 
 function renderPlano(){
@@ -2099,7 +2115,7 @@ function renderBackupStatus(){
   const dt=new Date(last);
   el.textContent=isNaN(dt)?'Never':dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
-function exportData(){const data=loadData();if(!data.settings)data.settings={};data.settings.lastExport=new Date().toISOString();saveData(data);const payload=JSON.stringify({version:'trackr_v46',exportedAt:data.settings.lastExport,data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);renderBackupStatus();showToast('✓ Backup exported');}
+function exportData(){const data=loadData();if(!data.settings)data.settings={};data.settings.lastExport=new Date().toISOString();saveData(data);const payload=JSON.stringify({version:'trackr_v47',exportedAt:data.settings.lastExport,data},null,2);const blob=new Blob([payload],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='trackr-backup-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);renderBackupStatus();showToast('✓ Backup exported');}
 function importData(event){const file=event.target.files&&event.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const parsed=JSON.parse(reader.result);const data=parsed.data||parsed;if(!data||!Array.isArray(data.expenses)||!Array.isArray(data.investments))throw new Error('invalid');saveData(data);event.target.value='';showToast('✓ Data imported');updateSalaryBadge();renderAll();renderFixedCosts();renderGoals();}catch(e){showToast('Invalid file')}};reader.readAsText(file);}
 
 /* ── INIT ── */
