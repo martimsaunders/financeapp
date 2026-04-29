@@ -2234,25 +2234,19 @@ function renderInsights(expenses,total,fixos,vars,monthInvested,d){
 /* ── PLANO ── */
 function normaliseBudget(d){
   if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
-  BUDGET_CATS.forEach(c=>{
-    d.budget[c.id]=Math.max(0,Math.min(100,Math.round(Number(d.budget[c.id])||0)));
-  });
+  BUDGET_CATS.forEach(c=>{d.budget[c.id]=Math.max(0,Math.min(100,Math.round(d.budget[c.id]||0))) });
   return d.budget;
-}
-
-function budgetTotal(b){
-  return BUDGET_CATS.reduce((s,c)=>s+(Number(b[c.id])||0),0);
 }
 
 function renderBudgetStack(b){
   const segs=document.getElementById('budget-stacked');
-  const total=budgetTotal(b);
+  const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
   if(total<=0){segs.innerHTML='';return;}
   segs.innerHTML=BUDGET_CATS.map(c=>`<div class="budget-stacked-seg" style="width:${Math.max(0,b[c.id]||0)}%;background:${c.color};flex-shrink:0"></div>`).join('');
 }
 
 function updateBudgetWarning(b){
-  const total=budgetTotal(b);
+  const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
   const warn=document.getElementById('budget-warn');
   if(total===100)warn.textContent='Total: 100%';
   else warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
@@ -2279,7 +2273,7 @@ function renderPlanoValues(b,sal){
 }
 
 function getMaxBudgetForCat(b,catId){
-  const otherTotal=BUDGET_CATS.reduce((s,c)=>c.id===catId?s:s+(Number(b[c.id])||0),0);
+  const otherTotal=BUDGET_CATS.reduce((s,c)=>c.id===catId?s:s+(b[c.id]||0),0);
   return Math.max(0,100-otherTotal);
 }
 
@@ -2289,26 +2283,28 @@ function clampBudgetValue(catId,val,b){
   return Math.min(wanted,maxAllowed);
 }
 
+function getPreviewBudget(catId,val){
+  const d=loadData();
+  const b={...normaliseBudget(d)};
+  b[catId]=clampBudgetValue(catId,val,b);
+  return {b,sal:d.salary||0,pct:b[catId]};
+}
+
 function previewBudgetSlide(catId, val, el){
   const d=loadData();
   const b=normaliseBudget(d);
-  const pct=clampBudgetValue(catId,val,b);
-
-  b[catId]=pct;
+  b[catId]=clampBudgetValue(catId,val,b);
   d.budget=b;
   saveData(d);
-
-  if(el && Number(el.value)!==pct)el.value=pct;
-
   const sal=d.salary||0;
+  const pct=b[catId];
+  if(el&&Number(el.value)!==pct)el.value=pct;
   const pctEl=document.getElementById('budget-pct-'+catId);
   const valEl=document.getElementById('budget-val-'+catId);
   if(pctEl)pctEl.textContent=pct+'%'+(sal>0?' · '+fmtS(sal*pct/100):'');
   if(valEl)valEl.textContent=pct+'%';
-
   const planVal=document.getElementById('plan-val-'+catId);
   if(planVal&&sal>0)planVal.textContent=fmtS(sal*pct/100);
-
   renderBudgetStack(b);
   updateBudgetWarning(b);
 }
