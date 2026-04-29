@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#f6f4ec">
 <meta name="color-scheme" content="light dark">
 <meta name="apple-mobile-web-app-title" content="Trackr">
@@ -548,7 +548,7 @@ html[data-theme="dark"] .modal-overlay.open{
 }
 
 
-/* v54: iPhone status/top bar follows theme; browser chrome dims with modals */
+/* v53: iPhone status/top bar follows light/dark + modal dim correctly */
 html, body{
   background:var(--status-bg,var(--bg))!important;
 }
@@ -570,27 +570,125 @@ html[data-theme="dark"]:not(.status-modal-light):not(.status-modal-dark){
   --status-bg:#0f1020;
 }
 html.status-modal-light{
-  --status-bg:#f6f4ec;
+  --status-bg:#c3c0bd;
 }
 html.status-modal-dark{
-  --status-bg:#0f1020;
+  --status-bg:#090a14;
+}
+
+
+/* v54: exact iPhone top/status color rules
+   light = app light background
+   dark = app dark background
+   modal = the dimmed background color for that current theme */
+#ios-status-fill{
+  display:none!important;
+}
+
+html[data-theme="light"]:not(.status-modal-light):not(.status-modal-dark),
+html[data-theme="light"]:not(.status-modal-light):not(.status-modal-dark) body{
+  background:#f6f4ec!important;
+}
+
+html[data-theme="dark"]:not(.status-modal-light):not(.status-modal-dark),
+html[data-theme="dark"]:not(.status-modal-light):not(.status-modal-dark) body{
+  background:#0f1020!important;
+}
+
+html.status-modal-light,
+html.status-modal-light body{
+  background:#c3c0bd!important;
+}
+
+html.status-modal-dark,
+html.status-modal-dark body{
+  background:#090a14!important;
+}
+
+body::before{
+  content:''!important;
+  position:fixed!important;
+  top:0!important;
+  left:0!important;
+  right:0!important;
+  height:max(env(safe-area-inset-top),22px)!important;
+  background:var(--status-bg,var(--bg))!important;
+  z-index:650!important;
+  pointer-events:none!important;
+  transition:background-color .28s cubic-bezier(.22,1,.36,1)!important;
+}
+
+html[data-theme="light"]:not(.status-modal-light):not(.status-modal-dark) body::before{
+  background:#f6f4ec!important;
+}
+
+html[data-theme="dark"]:not(.status-modal-light):not(.status-modal-dark) body::before{
+  background:#0f1020!important;
+}
+
+html.status-modal-light body::before{
+  background:#c3c0bd!important;
+}
+
+html.status-modal-dark body::before{
+  background:#090a14!important;
+}
+
+
+/* v55 final iPhone top color sync */
+#ios-status-fill{display:none !important;}
+
+html,
+body{
+  background:var(--status-bg, var(--bg)) !important;
+  background-color:var(--status-bg, var(--bg)) !important;
+}
+
+html.status-modal-light,
+html.status-modal-dark,
+html.status-modal-light body,
+html.status-modal-dark body{
+  background:var(--status-bg, var(--bg)) !important;
+  background-color:var(--status-bg, var(--bg)) !important;
+}
+
+body::before,
+html[data-theme="dark"] body::before,
+body.modal-open::before,
+html[data-theme="dark"] body.modal-open::before,
+html[data-theme="light"] body::before,
+html[data-theme="light"] body.modal-open::before{
+  content:'' !important;
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  height:max(env(safe-area-inset-top), 22px) !important;
+  min-height:22px !important;
+  background:var(--status-bg, var(--bg)) !important;
+  background-color:var(--status-bg, var(--bg)) !important;
+  z-index:650 !important;
+  pointer-events:none !important;
+  transition:background-color .22s cubic-bezier(.22,1,.36,1), background .22s cubic-bezier(.22,1,.36,1) !important;
 }
 
 </style>
+
+
 
 <script>
 (function(){
   try{
     var theme = localStorage.getItem('fin_theme') || 'light';
     var root = document.documentElement;
-    root.setAttribute('data-theme', theme);
-    root.style.colorScheme = theme;
     var color = theme === 'dark' ? '#0f1020' : '#f6f4ec';
+    root.setAttribute('data-theme', theme);
+    root.style.setProperty('--status-bg', color);
     root.style.backgroundColor = color;
-    var themeMeta = document.querySelector('meta[name="theme-color"]');
-    if(themeMeta) themeMeta.setAttribute('content', color);
-    var statusMeta = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if(statusMeta) statusMeta.setAttribute('content', theme === 'dark' ? 'black-translucent' : 'default');
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute('content', color);
+    var apple = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if(apple) apple.setAttribute('content', 'black-translucent');
   }catch(e){}
 })();
 </script>
@@ -1205,33 +1303,23 @@ document.getElementById('today-date').textContent=now.toLocaleDateString('en-GB'
 function syncIOSChrome(){
   const root=document.documentElement;
   const theme=root.getAttribute('data-theme')||'light';
-  const modalOpen=document.body.classList.contains('modal-open');
+  const modalOpen=!!document.querySelector('.modal-overlay.open, .modal-overlay.preopen') || document.body.classList.contains('modal-open');
 
   const baseColor = theme==='dark' ? '#0f1020' : '#f6f4ec';
-  const chromeColor = modalOpen
-    ? (theme==='dark' ? '#0a0b15' : '#c4c2bf')
-    : baseColor;
+  const modalColor = theme==='dark' ? '#0a0b15' : '#c4c2bc';
+  const color = modalOpen ? modalColor : baseColor;
 
-  root.classList.toggle('status-modal-light', modalOpen && theme!=='dark');
-  root.classList.toggle('status-modal-dark', modalOpen && theme==='dark');
-
-  root.style.setProperty('--status-bg', baseColor);
-  root.style.backgroundColor=baseColor;
-  root.style.colorScheme=theme;
-  document.body.style.backgroundColor=baseColor;
-  document.body.style.colorScheme=theme;
-
-  const fill=document.getElementById('ios-status-fill');
-  if(fill)fill.style.backgroundColor=baseColor;
+  root.classList.remove('status-modal-light','status-modal-dark');
+  root.style.setProperty('--status-bg', color);
+  root.style.backgroundColor = color;
+  document.body.style.background = color;
+  document.body.style.backgroundColor = color;
 
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',chromeColor);
-
-  const scheme=document.querySelector('meta[name="color-scheme"]');
-  if(scheme)scheme.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
+  if(meta)meta.setAttribute('content',color);
 
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-  if(appleStatus)appleStatus.setAttribute('content', theme==='dark' ? 'black-translucent' : 'default');
+  if(appleStatus)appleStatus.setAttribute('content','black-translucent');
 }
 function applyTheme(theme, instant=false){
   const root=document.documentElement;
@@ -1251,6 +1339,11 @@ function toggleTheme(){
 }
 hydrateStaticIcons();
 applyTheme(localStorage.getItem('fin_theme')||'light', true);
+
+syncIOSChrome();
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) syncIOSChrome(); });
+window.addEventListener('pageshow', syncIOSChrome);
+
 
 /* iOS/PWA viewport polish */
 function fixIOSViewport(){
@@ -1317,7 +1410,10 @@ document.getElementById('fab-btn').onclick=()=>{
 function releaseStatusInstant(){}
 function openModal(id){
   document.querySelectorAll('.modal-overlay.open').forEach(m=>{
-    if(m.id!==id)m.classList.remove('open');
+    if(m.id!==id){
+      m.classList.remove('open');
+      m.classList.remove('preopen');
+    }
   });
 
   const overlay=document.getElementById(id);
@@ -1327,30 +1423,27 @@ function openModal(id){
   if(sheet)sheet.scrollTop=0;
 
   document.body.classList.add('modal-open');
-  document.documentElement.classList.remove('status-modal-light','status-modal-dark');
-  syncIOSChrome();
-
   overlay.classList.add('preopen');
+  syncIOSChrome();
   void overlay.offsetHeight;
-
-  requestAnimationFrame(()=>{
-    overlay.classList.add('open');
-    overlay.classList.remove('preopen');
-    syncIOSChrome();
-  });
+  overlay.classList.add('open');
+  requestAnimationFrame(()=>overlay.classList.remove('preopen'));
 }
 
 function closeModal(id){
   const overlay=document.getElementById(id);
-  if(overlay)overlay.classList.remove('open');
+  if(overlay){
+    overlay.classList.remove('open');
+    overlay.classList.remove('preopen');
+  }
 
-  requestAnimationFrame(()=>{
-    if(!document.querySelector('.modal-overlay.open')){
+  setTimeout(()=>{
+    if(!document.querySelector('.modal-overlay.open, .modal-overlay.preopen')){
       document.body.classList.remove('modal-open');
     }
     syncIOSChrome();
     setInputActive(false);
-  });
+  }, 220);
 }
 
 function overlayClick(e,id){if(e.target===document.getElementById(id))closeModal(id)}
