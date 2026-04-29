@@ -447,115 +447,49 @@ html.status-instant body::before{
 }
 
 
-/* v58: one single overlay over the whole app/top area */
-body::before,
-html[data-theme="dark"] body::before,
-body.modal-open::before,
-html[data-theme="dark"] body.modal-open::before{
-  background:var(--status-bg,var(--bg))!important;
-  z-index:0!important;
-  transition:none!important;
+/* v60: no separate iPhone-top layer — the app background itself fills the status area */
+html,
+body{
+  background:linear-gradient(180deg,var(--bg),var(--bg2))!important;
+  background-color:var(--bg)!important;
 }
 
-/* Remove any separate top/bottom overlay layers from previous versions */
-body::after{
+body::before,
+body::after,
+#ios-status-fill{
   content:none!important;
   display:none!important;
+  background:none!important;
 }
 
-html,
-body{
-  background:var(--status-bg,var(--bg))!important;
-  background-color:var(--status-bg,var(--bg))!important;
-}
-
+/* Ensure the app starts at the very top, behind the translucent iPhone status bar */
 .app{
-  z-index:1;
-}
-
-/* The modal overlay now covers the app AND the top safe-area together */
-.modal-overlay{
-  z-index:500!important;
   inset:0!important;
-  background:rgba(17,18,31,0)!important;
-  transition:background .3s var(--ease)!important;
-}
-
-.modal-overlay.open{
-  background:rgba(17,18,31,.22)!important;
-}
-
-html[data-theme="dark"] .modal-overlay.open{
-  background:rgba(0,0,0,.34)!important;
-}
-
-.modal{
-  position:relative;
-  z-index:501!important;
-}
-
-
-/* v59: iPhone top always matches the app background */
-html,
-body{
-  background:var(--status-bg,var(--bg))!important;
-  background-color:var(--status-bg,var(--bg))!important;
-}
-
-html[data-theme="light"],
-html[data-theme="light"] body{
-  --status-bg:#f6f4ec;
-}
-
-html[data-theme="dark"],
-html[data-theme="dark"] body{
-  --status-bg:#0f1020;
-}
-
-body::before,
-html[data-theme="dark"] body::before,
-body.modal-open::before,
-html[data-theme="dark"] body.modal-open::before{
-  content:''!important;
-  position:fixed!important;
   top:0!important;
-  left:0!important;
-  right:0!important;
-  height:max(env(safe-area-inset-top),22px)!important;
-  background:var(--status-bg,var(--bg))!important;
-  background-color:var(--status-bg,var(--bg))!important;
-  z-index:650!important;
-  pointer-events:none!important;
-  transition:none!important;
+  background:linear-gradient(180deg,var(--bg),var(--bg2))!important;
 }
 
-/* keep one dimming layer only */
+/* One single dimming layer: covers the app/top at the same time */
 .modal-overlay{
+  position:fixed!important;
+  inset:0!important;
   z-index:700!important;
 }
 
 .modal{
+  position:relative;
   z-index:701!important;
 }
 
+/* Keep theme changes synced like v45 */
+html.theme-lock *,
+html.theme-lock *::before,
+html.theme-lock *::after{
+  transition:none!important;
+  animation:none!important;
+}
+
 </style>
-
-<script>
-(function(){
-  try{
-    var theme = localStorage.getItem('fin_theme') || 'light';
-    var color = theme === 'dark' ? '#0f1020' : '#f6f4ec';
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.style.setProperty('--status-bg', color);
-    document.documentElement.style.background = color;
-    document.documentElement.style.backgroundColor = color;
-    document.body && (document.body.style.backgroundColor = color);
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.setAttribute('content', color);
-  }catch(e){}
-})();
-</script>
-
 </head>
 <body>
 <div class="app">
@@ -1167,8 +1101,6 @@ function syncIOSChrome(){
   const theme=root.getAttribute('data-theme')||'light';
   const color = theme==='dark' ? '#0f1020' : '#f6f4ec';
 
-  root.style.setProperty('--status-bg',color);
-  root.style.background=color;
   root.style.backgroundColor=color;
   document.body.style.backgroundColor=color;
 
