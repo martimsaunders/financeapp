@@ -2018,8 +2018,15 @@ function renderBudgetStack(b){
 function updateBudgetWarning(b){
   const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
   const warn=document.getElementById('budget-warn');
-  if(total===100)warn.textContent='Total: 100%';
-  else warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
+  if(!warn)return;
+
+  if(total===100){
+    warn.textContent='Total: 100%';
+    warn.style.color='var(--green)';
+  }else{
+    warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
+    warn.style.color='var(--muted)';
+  }
 }
 
 function renderPlanoValues(b,sal){
@@ -2061,24 +2068,31 @@ function getPreviewBudget(catId,val){
 }
 
 function previewBudgetSlide(catId, val, el){
-  const {b,sal,pct}=getPreviewBudget(catId,val);
+  const d=loadData();
+  const b=normaliseBudget(d);
+  const pct=clampBudgetValue(catId,val,b);
+
+  b[catId]=pct;
+  d.budget=b;
+  saveData(d);
+
+  const sal=d.salary||0;
   if(el&&Number(el.value)!==pct)el.value=pct;
+
   const pctEl=document.getElementById('budget-pct-'+catId);
   const valEl=document.getElementById('budget-val-'+catId);
   if(pctEl)pctEl.textContent=pct+'%'+(sal>0?' · '+fmtS(sal*pct/100):'');
   if(valEl)valEl.textContent=pct+'%';
+
   const planVal=document.getElementById('plan-val-'+catId);
   if(planVal&&sal>0)planVal.textContent=fmtS(sal*pct/100);
+
   renderBudgetStack(b);
   updateBudgetWarning(b);
 }
 
 function commitBudgetSlide(catId, val, el){
-  const d=loadData();
-  const b=normaliseBudget(d);
-  b[catId]=clampBudgetValue(catId,val,b);
-  if(el&&Number(el.value)!==b[catId])el.value=b[catId];
-  saveData(d);
+  previewBudgetSlide(catId,val,el);
   renderAll();
 }
 
