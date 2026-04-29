@@ -426,25 +426,6 @@ html[data-theme="dark"] body.modal-open::before{
   background:#0a0b15!important;
 }
 
-
-/* v66: iPhone top timing fix
-   Keep the top strip as the base theme color and let the modal overlay dim it,
-   so the top and background change in the same animation. */
-body::before{
-  z-index:250!important;
-  background:var(--status-bg,var(--bg))!important;
-}
-
-body.modal-open::before,
-html[data-theme="dark"] body.modal-open::before{
-  background:var(--status-bg,var(--bg))!important;
-}
-
-.modal-overlay{
-  z-index:500!important;
-  inset:0!important;
-}
-
 </style>
 </head>
 <body>
@@ -1061,14 +1042,14 @@ document.getElementById('today-date').textContent=now.toLocaleDateString('en-GB'
 /* ── THEME ── */
 function syncIOSChrome(){
   const theme=document.documentElement.getAttribute('data-theme')||'light';
-  const color=theme==='dark'?'#0f1020':'#f6f4ec';
-
+  const modalOpen=document.body.classList.contains('modal-open');
+  const color=modalOpen
+    ? (theme==='dark'?'#0a0b15':'#c4c2bc')
+    : (theme==='dark'?'#0f1020':'#f6f4ec');
   document.documentElement.style.setProperty('--status-bg',color);
   document.documentElement.style.backgroundColor=color;
-
   const meta=document.querySelector('meta[name="theme-color"]');
   if(meta)meta.setAttribute('content',color);
-
   const appleStatus=document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
   if(appleStatus)appleStatus.setAttribute('content','black-translucent');
 }
