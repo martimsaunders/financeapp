@@ -548,7 +548,7 @@ html[data-theme="dark"] .modal-overlay.open{
 }
 
 
-/* v53: iPhone status/top bar follows light/dark + modal dim correctly */
+/* v54: iPhone status/top bar follows theme; browser chrome dims with modals */
 html, body{
   background:var(--status-bg,var(--bg))!important;
 }
@@ -570,10 +570,10 @@ html[data-theme="dark"]:not(.status-modal-light):not(.status-modal-dark){
   --status-bg:#0f1020;
 }
 html.status-modal-light{
-  --status-bg:#c3c0bd;
+  --status-bg:#f6f4ec;
 }
 html.status-modal-dark{
-  --status-bg:#090a14;
+  --status-bg:#0f1020;
 }
 
 </style>
@@ -1207,24 +1207,25 @@ function syncIOSChrome(){
   const theme=root.getAttribute('data-theme')||'light';
   const modalOpen=document.body.classList.contains('modal-open');
 
-  const color = modalOpen
-    ? (theme==='dark' ? '#090a14' : '#c3c0bd')
-    : (theme==='dark' ? '#0f1020' : '#f6f4ec');
+  const baseColor = theme==='dark' ? '#0f1020' : '#f6f4ec';
+  const chromeColor = modalOpen
+    ? (theme==='dark' ? '#0a0b15' : '#c4c2bf')
+    : baseColor;
 
   root.classList.toggle('status-modal-light', modalOpen && theme!=='dark');
   root.classList.toggle('status-modal-dark', modalOpen && theme==='dark');
 
-  root.style.setProperty('--status-bg', color);
-  root.style.backgroundColor=color;
+  root.style.setProperty('--status-bg', baseColor);
+  root.style.backgroundColor=baseColor;
   root.style.colorScheme=theme;
-  document.body.style.backgroundColor=color;
+  document.body.style.backgroundColor=baseColor;
   document.body.style.colorScheme=theme;
 
   const fill=document.getElementById('ios-status-fill');
-  if(fill)fill.style.backgroundColor=color;
+  if(fill)fill.style.backgroundColor=baseColor;
 
   const meta=document.querySelector('meta[name="theme-color"]');
-  if(meta)meta.setAttribute('content',color);
+  if(meta)meta.setAttribute('content',chromeColor);
 
   const scheme=document.querySelector('meta[name="color-scheme"]');
   if(scheme)scheme.setAttribute('content', theme==='dark' ? 'dark light' : 'light dark');
