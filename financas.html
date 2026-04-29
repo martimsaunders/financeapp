@@ -2234,77 +2234,41 @@ function renderInsights(expenses,total,fixos,vars,monthInvested,d){
 /* ── PLANO ── */
 function normaliseBudget(d){
   if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
-
-  // Each visible slider keeps a 0–100 range.
-  // Values are cleaned, but we do not auto-balance other categories.
   BUDGET_CATS.forEach(c=>{
     d.budget[c.id]=Math.max(0,Math.min(100,Math.round(Number(d.budget[c.id])||0)));
   });
-
-  // Safety repair for older saved states that may already be above 100.
-  // We only reduce from the last categories on load, not while the user is dragging.
-  let overflow=getBudgetTotal(d.budget)-100;
-  if(overflow>0){
-    [...BUDGET_CATS].reverse().forEach(c=>{
-      if(overflow<=0)return;
-      const cut=Math.min(d.budget[c.id]||0,overflow);
-      d.budget[c.id]-=cut;
-      overflow-=cut;
-    });
-  }
-
   return d.budget;
 }
 
-function getBudgetTotal(b){
+function budgetTotal(b){
   return BUDGET_CATS.reduce((s,c)=>s+(Number(b[c.id])||0),0);
-}
-
-function getBudgetAllowedValue(catId,wanted,b){
-  const cleanWanted=Math.max(0,Math.min(100,Math.round(parseFloat(wanted)||0)));
-  const otherTotal=BUDGET_CATS.reduce((s,c)=>c.id===catId?s:s+(Number(b[c.id])||0),0);
-
-  // Allows the total to reach exactly 100%, but never go above it.
-  return Math.min(cleanWanted,Math.max(0,100-otherTotal));
 }
 
 function renderBudgetStack(b){
   const segs=document.getElementById('budget-stacked');
-  if(!segs)return;
-  const total=getBudgetTotal(b);
+  const total=budgetTotal(b);
   if(total<=0){segs.innerHTML='';return;}
-
-  segs.innerHTML=BUDGET_CATS.map(c=>`
-    <div class="budget-stacked-seg" style="width:${Math.max(0,b[c.id]||0)}%;background:${c.color};flex-shrink:0"></div>
-  `).join('');
+  segs.innerHTML=BUDGET_CATS.map(c=>`<div class="budget-stacked-seg" style="width:${Math.max(0,b[c.id]||0)}%;background:${c.color};flex-shrink:0"></div>`).join('');
 }
 
 function updateBudgetWarning(b){
-  const total=getBudgetTotal(b);
+  const total=budgetTotal(b);
   const warn=document.getElementById('budget-warn');
-  if(!warn)return;
-
-  if(total===100){
-    warn.textContent='Total: 100%';
-    warn.style.color='var(--green)';
-  }else{
-    warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
-    warn.style.color='var(--muted)';
-  }
+  if(total===100)warn.textContent='Total: 100%';
+  else warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
 }
 
 function renderPlanoValues(b,sal){
   const vcard=document.getElementById('plano-vals-card');
-  if(!vcard)return;
   vcard.style.display='block';
   if(sal>0){
     document.getElementById('plano-vals').innerHTML=BUDGET_CATS.map(c=>`
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="display:flex;align-items:center;gap:10px">
           <div style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0"></div>
-          <span style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.label}</span>
+          <span style="font-size:14px;font-weight:600">${c.label}</span>
         </div>
-        <span id="plan-val-${c.id}" style="font-size:15px;font-weight:800;color:${c.color};white-space:nowrap">${fmtS(sal*(b[c.id]||0)/100)}</span>
+        <span id="plan-val-${c.id}" style="font-size:15px;font-weight:800;color:${c.color}">${fmtS(sal*(b[c.id]||0)/100)}</span>
       </div>`).join('')+`
       <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:13px;color:var(--muted)">
         <span>Income</span><span style="color:var(--text);font-weight:800">${fmtS(sal)}</span>
@@ -2314,49 +2278,43 @@ function renderPlanoValues(b,sal){
   }
 }
 
-function updateBudgetUI(b,sal){
-  BUDGET_CATS.forEach(c=>{
-    const pct=b[c.id]||0;
-    const input=document.getElementById('budget-input-'+c.id);
-
-    if(input){
-      // Keep the visual range always 0–100.
-      input.min=0;
-      input.max=100;
-      if(Number(input.value)!==pct)input.value=pct;
-    }
-
-    const pctEl=document.getElementById('budget-pct-'+c.id);
-    if(pctEl)pctEl.textContent=pct+'%'+(sal>0?' · '+fmtS(sal*pct/100):'');
-
-    const valEl=document.getElementById('budget-val-'+c.id);
-    if(valEl)valEl.textContent=pct+'%';
-
-    const planVal=document.getElementById('plan-val-'+c.id);
-    if(planVal&&sal>0)planVal.textContent=fmtS(sal*pct/100);
-  });
-
-  renderBudgetStack(b);
-  updateBudgetWarning(b);
+function getMaxBudgetForCat(b,catId){
+  const otherTotal=BUDGET_CATS.reduce((s,c)=>c.id===catId?s:s+(Number(b[c.id])||0),0);
+  return Math.max(0,100-otherTotal);
 }
 
-function previewBudgetSlide(catId,val,el){
+function clampBudgetValue(catId,val,b){
+  const wanted=Math.max(0,Math.min(100,Math.round(parseFloat(val)||0)));
+  const maxAllowed=getMaxBudgetForCat(b,catId);
+  return Math.min(wanted,maxAllowed);
+}
+
+function previewBudgetSlide(catId, val, el){
   const d=loadData();
   const b=normaliseBudget(d);
+  const pct=clampBudgetValue(catId,val,b);
 
-  const pct=getBudgetAllowedValue(catId,val,b);
   b[catId]=pct;
   d.budget=b;
   saveData(d);
 
   if(el && Number(el.value)!==pct)el.value=pct;
-  updateBudgetUI(b,d.salary||0);
+
+  const sal=d.salary||0;
+  const pctEl=document.getElementById('budget-pct-'+catId);
+  const valEl=document.getElementById('budget-val-'+catId);
+  if(pctEl)pctEl.textContent=pct+'%'+(sal>0?' · '+fmtS(sal*pct/100):'');
+  if(valEl)valEl.textContent=pct+'%';
+
+  const planVal=document.getElementById('plan-val-'+catId);
+  if(planVal&&sal>0)planVal.textContent=fmtS(sal*pct/100);
+
+  renderBudgetStack(b);
+  updateBudgetWarning(b);
 }
 
-function commitBudgetSlide(catId,val,el){
+function commitBudgetSlide(catId, val, el){
   previewBudgetSlide(catId,val,el);
-
-  // Keep every page that depends on the monthly plan in sync.
   if(currentPage==='despesas')renderExpenses();
   if(currentPage==='investimentos')renderInvestments();
   if(currentPage==='resumo')renderSummary();
@@ -2366,7 +2324,6 @@ function renderPlano(){
   const d=loadData();
   const sal=d.salary||0;
   const b=normaliseBudget(d);
-  saveData(d);
 
   renderBudgetStack(b);
   updateBudgetWarning(b);
@@ -2380,7 +2337,7 @@ function renderPlano(){
       </div>
       <span class="budget-val" id="budget-val-${c.id}" style="color:${c.color}">${b[c.id]}%</span>
     </div>
-    <input id="budget-input-${c.id}" type="range" class="budget-slider" min="0" max="100" step="1" value="${b[c.id]}" oninput="previewBudgetSlide('${c.id}',this.value,this)" onchange="commitBudgetSlide('${c.id}',this.value,this)">
+    <input type="range" class="budget-slider" min="0" max="100" step="1" value="${b[c.id]}" oninput="previewBudgetSlide('${c.id}',this.value,this)" onchange="commitBudgetSlide('${c.id}',this.value,this)">
   `).join('');
 
   renderPlanoValues(b,sal);
