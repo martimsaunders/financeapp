@@ -284,6 +284,15 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
 .backup-reminder span{font-size:11px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.7px}
 .backup-reminder strong{font-size:13px;color:var(--text);font-weight:950}
 @media (max-width:360px){.quick-add-grid{grid-template-columns:1fr}.quick-add-btn{display:flex;align-items:center;justify-content:space-between}}
+
+.quick-edit-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.quick-edit-card{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:14px}
+.quick-edit-title{font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px}
+.quick-edit-row{display:grid;grid-template-columns:1fr 108px;gap:10px}
+.quick-edit-row .field{margin-bottom:10px}
+.quick-edit-card .field:last-child{margin-bottom:0}
+@media (max-width:360px){.quick-edit-row{grid-template-columns:1fr}}
+html.status-instant body::before{transition:none!important}
 .action-card{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.92);box-shadow:var(--shadow);border-radius:22px;padding:14px;border:none;color:var(--text);font-weight:900;text-align:left;cursor:pointer}
 .action-card-title{display:flex;align-items:center;gap:9px}
 .action-ico{width:30px;height:30px;border-radius:12px;background:var(--surface2);color:var(--accent);display:flex!important;align-items:center!important;justify-content:center!important;flex-shrink:0;margin-top:0!important}
@@ -450,13 +459,9 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
       <div class="card">
         <div class="card-head" style="margin-bottom:10px">
           <div class="card-title">Quick add</div>
-          <button class="small-pill" onclick="openDespesaModal()">Custom</button>
+          <button class="small-pill" onclick="openQuickAddModal()">Custom</button>
         </div>
-        <div class="quick-add-grid">
-          <button class="quick-add-btn" onclick="quickAddExpense('Coffee',1.20,'food','variable')"><span>Coffee</span><strong>1,20 €</strong></button>
-          <button class="quick-add-btn" onclick="quickAddExpense('Lunch',8.50,'food','variable')"><span>Lunch</span><strong>8,50 €</strong></button>
-          <button class="quick-add-btn" onclick="quickAddExpense('Transport',1.80,'transporte','variable')"><span>Transport</span><strong>1,80 €</strong></button>
-        </div>
+        <div class="quick-add-grid" id="quick-add-grid"></div>
       </div>
       <div class="card">
         <div class="card-title">By category</div>
@@ -607,6 +612,49 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
     <button class="btn-primary" onclick="saveExpense()">Save</button>
   </div>
 </div>
+<!-- MODAL QUICK ADD SHORTCUTS -->
+<div class="modal-overlay" id="modal-quick-add" onclick="overlayClick(event,'modal-quick-add')">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Quick add <button class="modal-close" onclick="closeModal('modal-quick-add')">✕</button></h2>
+    <div class="quick-edit-list">
+      <div class="quick-edit-card">
+        <div class="quick-edit-title">Shortcut 1</div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Name</label><input type="text" id="qa-name-0" placeholder="Coffee" autocomplete="off"></div>
+          <div class="field"><label>Amount</label><input type="text" inputmode="decimal" id="qa-amount-0" placeholder="1,20" autocomplete="off"></div>
+        </div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Category</label><select id="qa-cat-0"></select></div>
+          <div class="field"><label>Type</label><select id="qa-type-0"><option value="variable">Variable</option><option value="fixed">Fixed</option></select></div>
+        </div>
+      </div>
+      <div class="quick-edit-card">
+        <div class="quick-edit-title">Shortcut 2</div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Name</label><input type="text" id="qa-name-1" placeholder="Lunch" autocomplete="off"></div>
+          <div class="field"><label>Amount</label><input type="text" inputmode="decimal" id="qa-amount-1" placeholder="8,50" autocomplete="off"></div>
+        </div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Category</label><select id="qa-cat-1"></select></div>
+          <div class="field"><label>Type</label><select id="qa-type-1"><option value="variable">Variable</option><option value="fixed">Fixed</option></select></div>
+        </div>
+      </div>
+      <div class="quick-edit-card">
+        <div class="quick-edit-title">Shortcut 3</div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Name</label><input type="text" id="qa-name-2" placeholder="Transport" autocomplete="off"></div>
+          <div class="field"><label>Amount</label><input type="text" inputmode="decimal" id="qa-amount-2" placeholder="1,80" autocomplete="off"></div>
+        </div>
+        <div class="quick-edit-row">
+          <div class="field"><label>Category</label><select id="qa-cat-2"></select></div>
+          <div class="field"><label>Type</label><select id="qa-type-2"><option value="variable">Variable</option><option value="fixed">Fixed</option></select></div>
+        </div>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="saveQuickAdds()">Save shortcuts</button>
+  </div>
+</div>
 
 <!-- MODAL INVESTIMENTO (novo / adicionar a existente) -->
 <div class="modal-overlay" id="modal-invest" onclick="overlayClick(event,'modal-invest')">
@@ -712,7 +760,7 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
       <button class="small-pill" onclick="openFixedCostModal()">+ cost</button>
     </div>
     <div id="fixed-cost-list"></div>
-    <button class="btn-secondary" onclick="syncFixedBudgetFromUI()">Update plano mensal</button>
+    <button class="btn-secondary" onclick="syncFixedBudgetFromUI()">Update monthly plan</button>
   </div>
 </div>
 
@@ -756,7 +804,7 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
     <div class="field"><label>Icon</label><select id="goal-icon"><option value="plane">Travel</option><option value="car">Car</option><option value="home">Home</option><option value="gift">Gift</option><option value="laptop">Tech</option><option value="wallet">Other</option></select></div>
     <div class="field"><label>Goal name</label><input type="text" id="goal-name" placeholder="e.g. Bali trip, new car" autocomplete="off"></div>
     <div class="field"><label>Goal amount</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-target" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div></div>
-    <div class="field"><label>Already saved / invested</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-current" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div><div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Regista o ponto de partida deste objetivo.</div></div>
+    <div class="field"><label>Already saved / invested</label><div class="amount-wrap"><input type="text" inputmode="decimal" id="goal-current" placeholder="0,00" autocomplete="off"><span class="cur">€</span></div><div style="font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5">Set the starting point for this goal.</div></div>
     <button class="btn-primary" onclick="saveGoal()">Save goal</button>
   </div>
 </div>
@@ -783,9 +831,9 @@ html[data-theme="dark"] .modal-overlay.open{background:rgba(0,0,0,.34)}
       <div class="calendar-month" id="calendar-month-label"></div>
       <button onclick="changeCalendarMonth(1)">›</button>
     </div>
-    <div class="calendar-weekdays"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+    <div class="calendar-weekdays"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
     <div class="calendar-grid" id="calendar-grid"></div>
-    <div class="cal-detail" id="calendar-detail">Toca num dia para ver o total.</div>
+    <div class="cal-detail" id="calendar-detail">Tap a day to see the total.</div>
   </div>
 </div>
 
@@ -855,6 +903,12 @@ const BUDGET_CATS=[
   {id:'poupanca',label:'Savings',         color:'#4ade80'},
 ];
 
+const DEFAULT_QUICK_ADDS=[
+  {desc:'Coffee',amount:1.20,cat:'food',type:'variable'},
+  {desc:'Lunch',amount:8.50,cat:'food',type:'variable'},
+  {desc:'Transport',amount:1.80,cat:'transporte',type:'variable'},
+];
+
 let selectedCat=null, currentPage='despesas';
 let resumoMonth=new Date().getMonth(), resumoYear=new Date().getFullYear();
 let calendarMonth=new Date().getMonth(), calendarYear=new Date().getFullYear(), selectedCalendarDay=null;
@@ -875,6 +929,14 @@ function loadData(){
     if(!d.fixedCosts)d.fixedCosts=[];
     if(!d.fixedPaid)d.fixedPaid={};
     if(!d.settings)d.settings={};
+    if(!Array.isArray(d.settings.quickAdds))d.settings.quickAdds=DEFAULT_QUICK_ADDS.map(x=>({...x}));
+    d.settings.quickAdds=d.settings.quickAdds.slice(0,3).map((q,i)=>({
+      desc:String(q.desc||DEFAULT_QUICK_ADDS[i]?.desc||'Shortcut '+(i+1)),
+      amount:cents(q.amount||DEFAULT_QUICK_ADDS[i]?.amount||0),
+      cat:q.cat||DEFAULT_QUICK_ADDS[i]?.cat||'outro',
+      type:q.type||DEFAULT_QUICK_ADDS[i]?.type||'variable'
+    }));
+    while(d.settings.quickAdds.length<3)d.settings.quickAdds.push({...DEFAULT_QUICK_ADDS[d.settings.quickAdds.length]});
     if(!d.budget)d.budget={fixos:20,variaveis:30,invest:20,poupanca:30};
     d.expenses=d.expenses.map(e=>({...e,amount:cents(e.amount)}));
     d.fixedCosts=d.fixedCosts.map(f=>({...f,amount:cents(f.amount)}));
@@ -1030,7 +1092,7 @@ function showPage(p){
   }else{
     fabEl.style.display='flex';
     fabEl.textContent='+';
-    fabEl.setAttribute('aria-label',p==='investimentos'?'Add investimento':p==='objetivos'?'Add objetivo':'Add despesa');
+    fabEl.setAttribute('aria-label',p==='investimentos'?'Add investment':p==='objetivos'?'Add goal':'Add expense');
   }
   if(p==='resumo')renderSummary();
   if(p==='definicoes'){renderPlano();updateSalaryBadge();renderBackupStatus();}
@@ -1045,24 +1107,31 @@ document.getElementById('fab-btn').onclick=()=>{
 };
 
 /* ── MODAL ── */
+function releaseStatusInstant(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>document.documentElement.classList.remove('status-instant')));
+}
 function openModal(id){
+  document.documentElement.classList.add('status-instant');
   document.querySelectorAll('.modal-overlay.open').forEach(m=>{
     if(m.id!==id)m.classList.remove('open');
   });
   const overlay=document.getElementById(id);
-  if(!overlay)return;
+  if(!overlay){releaseStatusInstant();return;}
   const sheet=overlay.querySelector('.modal');
   if(sheet)sheet.scrollTop=0;
-  overlay.classList.add('open');
   document.body.classList.add('modal-open');
   syncIOSChrome();
+  overlay.classList.add('open');
+  releaseStatusInstant();
 }
 
 function closeModal(id){
+  document.documentElement.classList.add('status-instant');
   const overlay=document.getElementById(id);
   if(overlay)overlay.classList.remove('open');
   if(!document.querySelector('.modal-overlay.open'))document.body.classList.remove('modal-open');
   syncIOSChrome();
+  releaseStatusInstant();
   setInputActive(false);
 }
 
@@ -1115,7 +1184,7 @@ function toggleInvGoalFields(){
   const goalField=document.getElementById('inv-goal-target-field');
   const currentField=document.getElementById('inv-current-field');
   const amountLabel=document.getElementById('inv-amount-label');
-  const isGoal=type==='Goal'||type==='Objetivo';
+  const isGoal=type==='Goal';
   if(goalField)goalField.style.display=isGoal?'block':'none';
   if(currentField)currentField.style.display=isGoal?'none':'block';
   if(amountLabel)amountLabel.textContent=isGoal?'Amount to save now (€)':'Amount invested now (€)';
@@ -1210,7 +1279,7 @@ function saveInvestment(){
     const addAmt=parseAmt(document.getElementById('inv-invested').value);
     const curRaw=parseAmt(document.getElementById('inv-current').value);
     const target=parseAmt(document.getElementById('inv-goal-target').value);
-    const isGoal=(type==='Goal'||type==='Objetivo');
+    const isGoal=(type==='Goal');
 
     if(!addAmt||addAmt<=0){showToast('Add an amount');return}
     if(isGoal && (!target||target<=0)){showToast('Set a goal amount');return}
@@ -1301,7 +1370,7 @@ function openIncomeModal(){
 }
 
 /* ── RENDER ALL ── */
-function renderAll(){renderExpenses();renderInvestments();renderGoals();updateSalaryBadge();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes'){renderPlano();updateSalaryBadge();renderBackupStatus();}if(currentPage==='objetivos')renderGoals();}
+function renderAll(){renderQuickAdds();renderExpenses();renderInvestments();renderGoals();updateSalaryBadge();if(currentPage==='resumo')renderSummary();if(currentPage==='definicoes'){renderPlano();updateSalaryBadge();renderBackupStatus();}if(currentPage==='objetivos')renderGoals();}
 
 function getFixedCostTotal(){
   const d=loadData();
@@ -1521,6 +1590,66 @@ function renderFixedCosts(){
       </div>`
     }).join('')}`;
 }
+function getQuickAdds(d=loadData()){
+  if(!d.settings)d.settings={};
+  if(!Array.isArray(d.settings.quickAdds))d.settings.quickAdds=DEFAULT_QUICK_ADDS.map(x=>({...x}));
+  return d.settings.quickAdds.slice(0,3).map((q,i)=>({
+    desc:String(q.desc||DEFAULT_QUICK_ADDS[i]?.desc||'Shortcut '+(i+1)),
+    amount:cents(q.amount||DEFAULT_QUICK_ADDS[i]?.amount||0),
+    cat:q.cat||DEFAULT_QUICK_ADDS[i]?.cat||'outro',
+    type:q.type||DEFAULT_QUICK_ADDS[i]?.type||'variable'
+  }));
+}
+function renderQuickAdds(){
+  const grid=document.getElementById('quick-add-grid');
+  if(!grid)return;
+  const qs=getQuickAdds();
+  grid.innerHTML=qs.map((q,i)=>`<button class="quick-add-btn" onclick="quickAddPreset(${i})"><span>${q.desc}</span><strong>${fmtS(q.amount)}</strong></button>`).join('');
+}
+function fillQuickCategorySelects(){
+  for(let i=0;i<3;i++){
+    const sel=document.getElementById('qa-cat-'+i);
+    if(sel)sel.innerHTML=CATS.map(c=>`<option value="${c.id}">${c.label}</option>`).join('');
+  }
+}
+function openQuickAddModal(){
+  fillQuickCategorySelects();
+  const qs=getQuickAdds();
+  qs.forEach((q,i)=>{
+    const name=document.getElementById('qa-name-'+i), amount=document.getElementById('qa-amount-'+i), cat=document.getElementById('qa-cat-'+i), type=document.getElementById('qa-type-'+i);
+    if(name)name.value=q.desc;
+    if(amount)amount.value=String(q.amount).replace('.',',');
+    if(cat)cat.value=q.cat;
+    if(type)type.value=q.type;
+  });
+  openModal('modal-quick-add');
+}
+function saveQuickAdds(){
+  const d=loadData();
+  const shortcuts=[];
+  for(let i=0;i<3;i++){
+    const desc=(document.getElementById('qa-name-'+i)?.value||'').trim()||DEFAULT_QUICK_ADDS[i].desc;
+    const amount=parseAmt(document.getElementById('qa-amount-'+i)?.value);
+    if(!Number.isFinite(amount)||amount<=0){showToast('Check shortcut '+(i+1));return;}
+    if(!validateMoney(amount))return;
+    shortcuts.push({
+      desc,
+      amount:cents(amount),
+      cat:document.getElementById('qa-cat-'+i)?.value||DEFAULT_QUICK_ADDS[i].cat,
+      type:document.getElementById('qa-type-'+i)?.value||DEFAULT_QUICK_ADDS[i].type
+    });
+  }
+  if(!d.settings)d.settings={};
+  d.settings.quickAdds=shortcuts;
+  saveData(d);
+  closeModal('modal-quick-add');
+  showToast('✓ Shortcuts updated');
+  renderQuickAdds();
+}
+function quickAddPreset(index){
+  const q=getQuickAdds()[index];
+  if(q)quickAddExpense(q.desc,q.amount,q.cat,q.type);
+}
 function quickAddExpense(desc,amount,cat,type){
   const d=loadData();
   const value=cents(amount);
@@ -1722,25 +1851,25 @@ function renderGoals(){
   const d=loadData();
   const goals=d.goals||[];
   const total=goals.reduce((s,g)=>s+(Number(g.current)||0),0);
-  const empty=`<div class="empty"><div class="empty-icon">${icon('target',28)}</div><p>Ainda não tens objetivos.<br>Poupa para aquilo que queres alcançar.</p></div>`;
+  const empty=`<div class="empty"><div class="empty-icon">${icon('target',28)}</div><p>No goals yet.<br>Save for what you want to achieve.</p></div>`;
   const html=goals.map(goalCardHtml).join('')||empty;
   const totalEl=document.getElementById('goals-total');
   if(totalEl){
     totalEl.textContent=fmtS(total);
-    document.getElementById('goals-count').textContent=`${goals.length} objetivo${goals.length!==1?'s':''} ativo${goals.length!==1?'s':''}`;
+    document.getElementById('goals-count').textContent=`${goals.length} active goal${goals.length!==1?'s':''}`;
     document.getElementById('goals-list').innerHTML=html;
   }
   const pageTotal=document.getElementById('goals-page-total');
   if(pageTotal){
     pageTotal.textContent=fmtS(total);
-    document.getElementById('goals-page-count').textContent=`${goals.length} objetivo${goals.length!==1?'s':''} ativo${goals.length!==1?'s':''}`;
+    document.getElementById('goals-page-count').textContent=`${goals.length} active goal${goals.length!==1?'s':''}`;
     document.getElementById('goals-page-list').innerHTML=html;
   }
 }
 
 /* ── RESUMO ── */
-const MN=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const MNF=['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MNF=['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function changeMonth(dir){
   resumoMonth+=dir;
@@ -1854,7 +1983,7 @@ function updateBudgetWarning(b){
   const total=BUDGET_CATS.reduce((s,c)=>s+(b[c.id]||0),0);
   const warn=document.getElementById('budget-warn');
   if(total===100)warn.textContent='Total: 100%';
-  else warn.textContent='Total: '+total+'% · ainda faltam '+(100-total)+'% por distribuir';
+  else warn.textContent='Total: '+total+'% · '+(100-total)+'% left to assign';
 }
 
 function renderPlanoValues(b,sal){
