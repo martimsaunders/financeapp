@@ -1106,6 +1106,8 @@ refreshIOSViewport();
 
 /* ── PAGES ── */
 function showPage(p){
+  if(currentPage==='definicoes')commitVisibleBudgetSliders();
+
   currentPage=p;
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
@@ -1119,6 +1121,8 @@ function showPage(p){
     fabEl.textContent='+';
     fabEl.setAttribute('aria-label',p==='investimentos'?'Add investment':p==='objetivos'?'Add goal':'Add expense');
   }
+  if(p==='despesas')renderExpenses();
+  if(p==='investimentos')renderInvestments();
   if(p==='resumo')renderSummary();
   if(p==='definicoes'){renderPlano();updateSalaryBadge();renderBackupStatus();}
   if(p==='objetivos')renderGoals();
@@ -2047,7 +2051,7 @@ function renderPlanoValues(b,sal){
         <span>Income</span><span style="color:var(--text);font-weight:800">${fmtS(sal)}</span>
       </div>`;
   } else {
-    document.getElementById('plano-vals').innerHTML='<div class="empty" style="padding:20px"><p>Define o teu ordenado no canto superior direito para ver os valores.</p></div>';
+    document.getElementById('plano-vals').innerHTML='<div class="empty" style="padding:20px"><p>Set your monthly income in Settings to see these values.</p></div>';
   }
 }
 
@@ -2093,9 +2097,36 @@ function previewBudgetSlide(catId, val, el){
   updateBudgetWarning(b);
 }
 
-function commitBudgetSlide(catId, val, el){
-  previewBudgetSlide(catId,val,el);
-  renderAll();
+function commitVisibleBudgetSliders(){
+  const sliderWrap=document.getElementById('budget-sliders');
+  if(!sliderWrap)return;
+
+  const sliders=sliderWrap.querySelectorAll('[data-budget-cat]');
+  if(!sliders.length)return;
+
+  const d=loadData();
+  const b=normaliseBudget(d);
+  let changed=false;
+
+  sliders.forEach(el=>{
+    const catId=el.getAttribute('data-budget-cat');
+    if(!catId)return;
+
+    const pct=clampBudgetValue(catId,el.value,b);
+    if((b[catId]||0)!==pct){
+      b[catId]=pct;
+      changed=true;
+    }
+
+    if(Number(el.value)!==pct)el.value=pct;
+  });
+
+  if(changed){
+    d.budget=b;
+    saveData(d);
+    updateBudgetWarning(b);
+    renderBudgetStack(b);
+  }
 }
 
 function renderPlano(){
@@ -2115,7 +2146,7 @@ function renderPlano(){
       </div>
       <span class="budget-val" id="budget-val-${c.id}" style="color:${c.color}">${b[c.id]}%</span>
     </div>
-    <input type="range" class="budget-slider" min="0" max="100" step="1" value="${b[c.id]}" oninput="previewBudgetSlide('${c.id}',this.value,this)" onchange="commitBudgetSlide('${c.id}',this.value,this)">
+    <input type="range" class="budget-slider" data-budget-cat="${c.id}" min="0" max="100" step="1" value="${b[c.id]}" oninput="previewBudgetSlide('${c.id}',this.value,this)" onchange="commitBudgetSlide('${c.id}',this.value,this)" onpointerup="commitBudgetSlide('${c.id}',this.value,this)" ontouchend="commitBudgetSlide('${c.id}',this.value,this)">
   `).join('');
 
   renderPlanoValues(b,sal);
